@@ -6,11 +6,9 @@ export default defineConfig({
   server: {
     port: parseInt(process.env.PORT || '5173', 10),
     host: true,
-    allowedHosts: ['*']  // Accept requests from any domain
   },
   preview: {
     port: parseInt(process.env.PORT || '3000', 10),
     host: true,
-    allowedHosts: ['*']
   }
 })
