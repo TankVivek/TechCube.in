@@ -3,9 +3,10 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
+    "vite": "vite",
     "dev": "vite",
     "build": "vite build",
-    "start": "vite preview --port $PORT"
+    "start": "vite preview --port 4173"
   },
   "keywords": [],
   "author": "",
