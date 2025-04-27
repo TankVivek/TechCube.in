@@ -6,7 +6,7 @@
     "vite": "vite",
     "dev": "vite --port 8000",
     "build": "vite build",
-    "start": "vite preview --host --port $PORT"
+    "start": "vite preview --port ${PORT:-8000}"
   },
   "keywords": [],
   "author": "",
