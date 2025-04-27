@@ -10,7 +10,7 @@ const Hero = lazy(() => import('./pages/hero'));
 const Services = lazy(() => import('./pages/services'));
 const Expertise = lazy(() => import('./pages/expertise'));
 const About = lazy(() => import('./pages/About'));
-const AISolutions = lazy(() => import('./pages/AISolutions'));
+const AISolutions = lazy(() => import('./pages/aISolutions'));
 const Industries = lazy(() => import('./pages/industries'));
 const Testimonials = lazy(() => import('./pages/Testimonials'));
 const BlogPreview = lazy(() => import('./pages/BlogPreview'));
