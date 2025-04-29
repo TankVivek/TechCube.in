@@ -13,7 +13,7 @@ const SEOHead = ({
     "@type": "Organization",
     "name": "TechCube",
     "url": "https://techcube.in",
-    "logo": "https://techcube.in/images/logo.png",
+    "logo": "https://techcube.in/logo-small.png",
     "sameAs": [
       "https://facebook.com/techcube",
       "https://twitter.com/techcube",
