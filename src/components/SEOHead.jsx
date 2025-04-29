@@ -1,3 +1,4 @@
+import React from 'react';
 import { Helmet } from 'react-helmet-async';
 
 const SEOHead = ({
@@ -7,7 +8,7 @@ const SEOHead = ({
   image = "https://techcube.in/images/og-image.jpg",
   type = "website"
 }) => {
-  // Create structured data for organization
+  // Structured data for Organization
   const organizationSchema = {
     "@context": "https://schema.org",
     "@type": "Organization",
@@ -35,7 +36,7 @@ const SEOHead = ({
     "description": "TechCube is a leading IT solutions provider specializing in web development, mobile apps, AI solutions, and custom software development for businesses."
   };
 
-  // Create structured data for service
+  // Structured data for Service
   const serviceSchema = {
     "@context": "https://schema.org",
     "@type": "Service",
@@ -60,7 +61,7 @@ const SEOHead = ({
       <title>{title}</title>
       <meta name="description" content={description} />
       <link rel="canonical" href={canonicalUrl} />
-      
+
       {/* Open Graph / Facebook */}
       <meta property="og:type" content={type} />
       <meta property="og:url" content={canonicalUrl} />
@@ -74,10 +75,12 @@ const SEOHead = ({
       <meta name="twitter:title" content={title} />
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={image} />
-      
+
       {/* Keywords */}
-      <meta name="keywords" content="software development, web development, mobile app development, AI solutions, machine learning, IT company Mumbai, custom software, React.js, Node.js, Python development" />
-      
+      <meta
+        name="keywords"
+        content="software development, web development, mobile app development, AI solutions, machine learning, IT services, custom software, React.js, Node.js, Python development, full stack developer, cloud computing, AWS, DigitalOcean, web scraping, data extraction, API integration, DevOps, MongoDB, Express.js, RESTful APIs, responsive design, UI/UX, e-commerce solutions, microservices architecture, agile development, Scrum, offshore development, SaaS, PWA, containerization, Docker, Kubernetes, CI/CD, database management, PostgreSQL, MySQL, digital transformation, enterprise software, QA automation, performance optimization, cybersecurity, fintech solutions, real-time tracking"
+      />
       {/* Structured Data */}
       <script type="application/ld+json">
         {JSON.stringify(organizationSchema)}
