@@ -2,6 +2,7 @@ import React, { useEffect, lazy, Suspense } from 'react';
 import ReactDOM from 'react-dom/client';
 import { HelmetProvider } from 'react-helmet-async';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import './styles/global.css';
 import SEOHead from './components/SEOHead';
 
 // Import components with lazy loading for better performance
@@ -17,10 +18,22 @@ const BlogPreview = lazy(() => import('./pages/BlogPreview'));
 const Contact = lazy(() => import('./pages/contact'));
 const Footer = lazy(() => import('./pages/footer'));
 
-// Loading component for Suspense fallback
-const Loading = () => (
-  <div className="flex items-center justify-center min-h-screen bg-gray-100">
-    <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-600"></div>
+// Page wrapper component
+const PageWrapper = ({ children }) => (
+  <div className="page-container">
+    <div className="page-content">
+      <div className="content-wrapper">
+        {children}
+      </div>
+    </div>
+  </div>
+);
+
+// Loading spinner component
+const LoadingSpinner = () => (
+  <div className="fixed inset-0 flex items-center justify-center bg-white z-50">
+    <div className="loader"></div>
+    <span className="sr-only">Loading...</span>
   </div>
 );
 
@@ -220,6 +233,22 @@ const styles = `
       padding: 12px;
     }
   }
+
+  /* Loader styles */
+  .loader {
+    border: 6px solid #e5e7eb;
+    border-top: 6px solid #2563eb;
+    border-radius: 50%;
+    width: 48px;
+    height: 48px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg);}
+    100% { transform: rotate(360deg);}
+  }
 `;
 
 const HomePage = () => {
@@ -257,41 +286,42 @@ const HomePage = () => {
   }, []);
 
   return (
-    <>
+    <PageWrapper>
       <SEOHead />
       <style>{styles}</style>
-      <Suspense fallback={<Loading />}>
+      <Suspense fallback={<LoadingSpinner />}>
         <Header />
         <main>
           <Hero />
           <Services />
-          <Expertise />
-          <AISolutions />
+          {/* <Expertise /> */}
           {/* <About /> */}
-          {/* <Testimonials /> */}
+          <AISolutions />
           {/* <Industries /> */}
+          {/* <Testimonials /> */}
           {/* <BlogPreview /> */}
           <Contact />
         </main>
         <Footer />
       </Suspense>
-    </>
+    </PageWrapper>
   );
 };
 
 const App = () => (
-  <HelmetProvider>
-    <Router>
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        {/* Add other routes as needed for blog, etc. */}
-      </Routes>
-    </Router>
-  </HelmetProvider>
+  <Router>
+    <HelmetProvider>
+      <div className="page-container">
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          {/* Add other routes as needed for blog, etc. */}
+        </Routes>
+      </div>
+    </HelmetProvider>
+  </Router>
 );
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(
+ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <App />
   </React.StrictMode>

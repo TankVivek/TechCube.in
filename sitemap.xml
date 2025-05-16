@@ -1,16 +1,52 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+  <!-- Home -->
   <url>
     <loc>https://techcube.in/</loc>
     <lastmod>2025-04-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>1.0</priority>
   </url>
+
+  <!-- Blog -->
   <url>
     <loc>https://techcube.in/blog</loc>
     <lastmod>2025-04-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
-  <!-- Add all your important URLs -->
+
+  <!-- Services -->
+  <url>
+    <loc>https://techcube.in/services</loc>
+    <lastmod>2025-04-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- About -->
+  <url>
+    <loc>https://techcube.in/about</loc>
+    <lastmod>2025-04-25</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Contact -->
+  <url>
+    <loc>https://techcube.in/contact</loc>
+    <lastmod>2025-04-25</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Example Blog Post -->
+  <url>
+    <loc>https://techcube.in/blog/ai-in-software</loc>
+    <lastmod>2025-05-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
 </urlset>

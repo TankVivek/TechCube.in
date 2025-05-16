@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion'; // Add animation library
-import logo from '../../public/logo-small.png';
+import logo from '../assets/logo-small.png'; // Adjust the path to your logo
 
 const Header = () => {
   const [scrolled, setScrolled] = useState(false);
