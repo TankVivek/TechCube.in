@@ -4,8 +4,8 @@
   "description": "TechCube Website with Frontend and Backend Services",
   "scripts": {
     "build": "cd frontend && npm install && vite build && cd ../backend && npm install",
-    "preview": "cd frontend && vite preview",
-    "start": "concurrently \"cd frontend && npm run preview\" \"cd backend && npm start\"",
+    "preview": "cd frontend && npm run preview",
+    "start": "concurrently \"cd frontend && npm run start\" \"cd backend && npm start\"",
     "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
     "dev:frontend": "cd frontend && npm run dev",
     "dev:backend": "cd backend && npm run dev",

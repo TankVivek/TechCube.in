@@ -5,17 +5,17 @@ const Hero = () => {
     <section id="home" className="gradient-bg min-h-screen flex items-center justify-center relative overflow-hidden">
       {/* Animated background elements */}
       <div className="absolute inset-0">
-        <div className="absolute top-20 left-10 w-64 h-64 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob"></div>
-        <div className="absolute top-40 right-10 w-72 h-72 bg-purple-400 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-2000"></div>
-        <div className="absolute bottom-20 left-1/3 w-80 h-80 bg-green-400 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-4000"></div>
+        <div className="absolute top-20 left-10 w-32 sm:w-64 h-32 sm:h-64 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob"></div>
+        <div className="absolute top-40 right-10 w-40 sm:w-72 h-40 sm:h-72 bg-purple-400 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-2000"></div>
+        <div className="absolute bottom-20 left-1/3 w-48 sm:w-80 h-48 sm:h-80 bg-green-400 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-4000"></div>
       </div>
       
-      <div className="max-w-5xl mx-auto text-center z-10 px-4 pt-16 hero-content">
+      <div className="max-w-5xl mx-auto text-center z-10 px-4 sm:px-6 pt-16 pb-20 sm:pb-0 hero-content">
         <motion.h1 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease: "easeOut" }}
-          className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 text-white leading-tight"
+          className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 text-white leading-tight"
         >
           Transforming Ideas into{" "}
           <span className="relative inline-block text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-teal-300">
@@ -27,7 +27,7 @@ const Hero = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.2, ease: "easeOut" }}
-          className="text-xl md:text-2xl mb-8 text-blue-100 max-w-3xl mx-auto"
+          className="text-lg sm:text-xl md:text-2xl mb-6 sm:mb-8 text-blue-100 max-w-3xl mx-auto px-2"
         >
           Your strategic technology partner for custom software development, AI solutions, and digital transformation
         </motion.p>
@@ -36,17 +36,17 @@ const Hero = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.4, ease: "easeOut" }}
-          className="flex flex-wrap justify-center gap-4"
+          className="flex flex-col sm:flex-row justify-center gap-4 px-4"
         >
           <a 
             href="#services" 
-            className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-8 rounded-lg shadow-lg transition-all duration-300 hover:shadow-blue-700/50 hover:scale-105"
+            className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-8 rounded-lg shadow-lg transition-all duration-300 hover:shadow-blue-700/50 hover:scale-105"
           >
             Explore Our Services
           </a>
           <a 
             href="#contact" 
-            className="bg-transparent text-white border-2 border-white hover:bg-white hover:text-blue-600 font-medium py-3 px-8 rounded-lg transition-all duration-300 hover:scale-105"
+            className="w-full sm:w-auto bg-transparent text-white border-2 border-white hover:bg-white hover:text-blue-600 font-medium py-3 px-8 rounded-lg transition-all duration-300 hover:scale-105"
           >
             Start Your Project
           </a>
@@ -56,7 +56,7 @@ const Hero = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.6, ease: "easeOut" }}
-          className="mt-16"
+          className="mt-12 sm:mt-16"
         >
           {/* <p className="text-blue-200 mb-4">Trusted by innovative companies</p> */}
           {/* <div className="flex flex-wrap justify-center items-center gap-8 opacity-70"> */}

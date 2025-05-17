@@ -72,21 +72,22 @@ const Services = () => {
   };
 
   return (
-    <section id="services" className="py-20 px-4 bg-gray-50" ref={ref}>
+    <section id="services" className="py-12 sm:py-20 px-4 sm:px-6 bg-gray-50" ref={ref}>
       <div className="max-w-6xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
           transition={{ duration: 0.6 }}
+          className="text-center px-4"
         >
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-800 text-center mb-4">Our Services</h2>
-          <p className="text-center text-gray-600 mb-12 max-w-2xl mx-auto">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 mb-3 sm:mb-4">Our Services</h2>
+          <p className="text-base sm:text-lg text-gray-600 mb-8 sm:mb-12 max-w-2xl mx-auto">
             We deliver cutting-edge technology solutions that transform businesses and create exceptional digital experiences
           </p>
         </motion.div>
         
         <motion.div 
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8"
           variants={containerVariants}
           initial="hidden"
           animate={inView ? "visible" : "hidden"}
@@ -95,21 +96,21 @@ const Services = () => {
             <motion.div 
               key={index} 
               variants={itemVariants}
-              className="service-card bg-white p-6 md:p-8 rounded-xl shadow-md overflow-hidden flex flex-col h-full"
+              className="service-card bg-white p-5 sm:p-6 md:p-8 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden flex flex-col h-full"
             >
-              <div className="text-4xl mb-4">{service.icon}</div>
-              <h3 className="text-xl font-bold text-gray-800 mb-3">{service.title}</h3>
-              <p className="text-gray-600 mb-4">{service.description}</p>
+              <div className="text-3xl sm:text-4xl mb-3 sm:mb-4">{service.icon}</div>
+              <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-2 sm:mb-3">{service.title}</h3>
+              <p className="text-sm sm:text-base text-gray-600 mb-4">{service.description}</p>
               
               <div className="mt-auto">
-                <div className="mt-4 mb-6">
+                <div className="mt-3 sm:mt-4 mb-4 sm:mb-6">
                   <ul className="space-y-2">
                     {service.features.map((feature, idx) => (
-                      <li key={idx} className="flex items-center text-gray-700">
-                        <svg className="w-4 h-4 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <li key={idx} className="flex items-center text-sm sm:text-base text-gray-700">
+                        <svg className="w-4 h-4 text-green-500 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
                         </svg>
-                        {feature}
+                        <span>{feature}</span>
                       </li>
                     ))}
                   </ul>
@@ -117,7 +118,7 @@ const Services = () => {
                 
                 <a 
                   href="#contact" 
-                  className="inline-flex items-center text-blue-600 font-medium hover:text-blue-800 transition-colors group"
+                  className="inline-flex items-center text-blue-600 font-medium hover:text-blue-800 transition-colors group text-sm sm:text-base"
                 >
                   {service.cta}
                   <svg className="ml-2 w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
