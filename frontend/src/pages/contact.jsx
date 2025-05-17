@@ -46,7 +46,7 @@ import { useState, useRef, useEffect } from 'react';
       setIsLoading(true); // Set loading state when starting submission
       
       try {
-        const response = await axios.post('http://localhost:5000/api/email/send', {
+        const response = await axios.post('https://techcube.in/api/email/send', {
           name: formData.name,
           email: formData.email,
           message: formData.message
