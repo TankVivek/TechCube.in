@@ -231,7 +231,7 @@ h3 {
 }
 
 /* Transitions */
-.transition-all {
+.animate-transition {
   @apply transition-all duration-300 ease-in-out;
 }
 
