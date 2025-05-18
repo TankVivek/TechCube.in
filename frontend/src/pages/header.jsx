@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion'; // Add animation library
-import logo from '../assets/logo-small.png'; // Adjust the path to your logo
+import { motion } from 'framer-motion';
+import logo from '../assets/logo-small.png';
 
 const Header = () => {
   const [scrolled, setScrolled] = useState(false);
@@ -32,36 +32,29 @@ const Header = () => {
           transition={{ duration: 0.5 }}
           className="flex items-center space-x-2"
         >
-        <div className="flex items-center space-x-2">
-        <div className="flex items-center gap-1">
-        <img src={logo} alt="TechCube Logo" className="h-9 w-9" />
-        <h2 className={`text-2xl font-bold ${scrolled ? 'text-gray-800' : 'text-white'}`}>
-          TechCube
-        </h2>
-        </div>
-        </div>
+          <div className="flex items-center gap-1">
+            <img src={logo} alt="TechCube Logo" className="h-9 w-9" />
+            <h2 className={`text-2xl font-bold ${scrolled ? 'text-gray-800' : 'text-white'}`}>
+              TechCube
+            </h2>
+          </div>
         </motion.div>
 
-        {/* Enhanced Desktop Navigation with animations */}
         <nav className="hidden md:flex space-x-6 lg:space-x-8">
-          {['Home', 'Services', 'Expertise', 'AI Solutions', 
-          // 'Blog', 
-          'Contact'].map((item, index) => (
+          {['Home', 'Services', 'Expertise', 'AI Solutions', 'Contact'].map((item, index) => (
             <motion.a
               key={item}
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: index * 0.05 }}
               href={`#${item.toLowerCase().replace(" ", "-")}`}
-              className={`font-medium text-sm lg:text-base transition-colors duration-200 ${scrolled ? 'text-gray-700 hover:text-blue-600' : 'text-gray-100 hover:text-white'
-                } relative after:absolute after:bottom-[-4px] after:left-0 after:h-[2px] after:w-0 after:bg-blue-500 after:transition-all hover:after:w-full`}
+              className={`font-medium text-sm lg:text-base transition-colors duration-200 ${scrolled ? 'text-gray-700 hover:text-blue-600' : 'text-gray-100 hover:text-white'} relative after:absolute after:bottom-[-4px] after:left-0 after:h-[2px] after:w-0 after:bg-blue-500 after:transition-all hover:after:w-full`}
             >
               {item}
             </motion.a>
           ))}
         </nav>
 
-        {/* Mobile Menu Button */}
         <button
           className="md:hidden p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -84,32 +77,56 @@ const Header = () => {
         </button>
       </div>
 
-      {/* Mobile Navigation */}
-      <div className={`md:hidden fixed inset-0 z-40 transition-all duration-300 ease-out ${mobileMenuOpen
-          ? 'translate-y-0 opacity-100'
-          : '-translate-y-full opacity-0 pointer-events-none'
-        }`}>
-        {/* Backdrop */}
+      <div className={`md:hidden fixed inset-0 z-40 transition-all duration-300 ease-out ${mobileMenuOpen ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0 pointer-events-none'}`}>
         <div
           className="absolute inset-0 bg-black/50"
           onClick={() => setMobileMenuOpen(false)}
         />
 
-        {/* Menu Content */}
-        <div className="relative z-50 bg-white shadow-xl mt-16" style={{ height: 'calc(100vh - 4rem)' }}>
-          <nav className="px-4 py-2 overflow-y-auto h-full">
+        <div className="relative z-50 bg-white shadow-xl h-[100vh] flex flex-col">
+          <div className="flex gap-2 items-center justify-between px-6 py-4 bg-white shadow-md mb-5">
+            <div className="flex items-center gap-1">
+              <img src={logo} alt="TechCube Logo" className="h-9 w-9" />
+              <h2 className={`text-2xl font-bold ${scrolled ? 'text-gray-800' : 'text-white'}`}>
+                TechCube
+              </h2>
+            </div>
+
+            <button
+              onClick={() => setMobileMenuOpen(false)}
+              aria-label="Close menu"
+              className="text-gray-700 hover:text-red-500 focus:outline-none"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
+
+          <nav className="px-6 pb-6 space-y-5 overflow-y-auto">
             {['Home', 'Services', 'Expertise', 'Contact'].map((item) => (
               <a
                 key={item}
                 href={`#${item.toLowerCase()}`}
-                className="block py-4 text-gray-700 hover:text-blue-600 font-medium border-b border-gray-100 last:border-b-0 transition-colors duration-200 text-lg"
+                className="block text-lg text-gray-700 font-medium hover:text-blue-600 border-b border-gray-100 pb-3"
                 onClick={(e) => {
                   e.preventDefault();
-                  document.querySelector(e.currentTarget.getAttribute('href')).scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                  });
+                  const section = document.querySelector(e.currentTarget.getAttribute('href'));
                   setMobileMenuOpen(false);
+                  setTimeout(() => {
+                    section?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }, 300);
                 }}
               >
                 {item}

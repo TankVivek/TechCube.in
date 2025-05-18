@@ -1,65 +1,97 @@
 import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
+import {
+  CodeBracketIcon,
+  DevicePhoneMobileIcon,
+  CloudIcon,
+  CpuChipIcon,
+  CommandLineIcon,
+  ServerIcon,
+} from '@heroicons/react/24/outline';
+
+const services = [
+  {
+    title: 'Web Development',
+    description: 'Custom web applications built with modern technologies and best practices.',
+    icon: CodeBracketIcon,
+    features: [
+      'Responsive Design',
+      'Progressive Web Apps',
+      'E-commerce Solutions',
+      'CMS Development'
+    ]
+  },
+  {
+    title: 'Mobile Development',
+    description: 'Native and cross-platform mobile applications for iOS and Android.',
+    icon: DevicePhoneMobileIcon,
+    features: [
+      'iOS Development',
+      'Android Development',
+      'Cross-platform Apps',
+      'App Store Optimization'
+    ]
+  },
+  {
+    title: 'Cloud Solutions',
+    description: 'Scalable cloud infrastructure and serverless applications.',
+    icon: CloudIcon,
+    features: [
+      'AWS Solutions',
+      'Azure Services',
+      'Google Cloud',
+      'Serverless Architecture'
+    ]
+  },
+  {
+    title: 'AI & Machine Learning',
+    description: 'Intelligent solutions powered by cutting-edge AI and ML technologies.',
+    icon: CpuChipIcon,
+    features: [
+      'Machine Learning Models',
+      'Natural Language Processing',
+      'Computer Vision',
+      'Predictive Analytics'
+    ]
+  },
+  {
+    title: 'DevOps & CI/CD',
+    description: 'Automated deployment pipelines and infrastructure as code.',
+    icon: CommandLineIcon,
+    features: [
+      'Continuous Integration',
+      'Continuous Deployment',
+      'Infrastructure as Code',
+      'Container Orchestration'
+    ]
+  },
+  {
+    title: 'Backend Development',
+    description: 'Robust and scalable backend systems and APIs.',
+    icon: ServerIcon,
+    features: [
+      'API Development',
+      'Database Design',
+      'Microservices',
+      'System Architecture'
+    ]
+  }
+];
 
 const Services = () => {
-  const { ref, inView } = useInView({
+  const [ref, inView] = useInView({
     triggerOnce: true,
-    threshold: 0.1
+    threshold: 0.1,
   });
-
-  const services = [
-    {
-      title: "Web Development",
-      description: "Custom-built web applications using React.js, Node.js, and Python that deliver exceptional user experiences and business outcomes.",
-      icon: "",
-      features: ["Responsive design", "API integration", "Progressive Web Apps"],
-      cta: "Explore Web Solutions"
-    },
-    {
-      title: "Mobile App Development",
-      description: "Native and cross-platform mobile applications that engage users and extend your digital reach across iOS and Android devices.",
-      icon: "",
-      features: ["React Native", "Flutter", "Native iOS/Android"],
-      cta: "Discover Mobile Solutions"
-    },
-    {
-      title: "Backend Architecture",
-      description: "Scalable, secure, and high-performance backend systems that power your applications and handle growing user demands.",
-      icon: "",
-      features: ["Microservices", "API development", "Database optimization"],
-      cta: "Build Your Backend"
-    },
-    {
-      title: "DevOps & CI/CD",
-      description: "Streamlined development workflows and automated deployment pipelines that accelerate your time to market.",
-      icon: "",
-      features: ["Docker", "Cloud deployment", "CI/CD pipelines"],
-      cta: "Optimize Your Workflow"
-    },
-    {
-      title: "AI Integration",
-      description: "Harness the power of artificial intelligence with custom solutions that automate processes and deliver actionable insights.",
-      icon: "",
-      features: ["Machine learning", "Data analysis", "Automation"],
-      cta: "Explore AI Solutions"
-    },
-    {
-      title: "E-commerce Solutions",
-      description: "Comprehensive online store implementations with seamless payment processing, inventory management, and customer experiences.",
-      icon: "",
-      features: ["Payment gateways", "Inventory systems", "Customer portals"],
-      cta: "Launch Your Store"
-    }
-  ];
 
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1
-      }
-    }
+        staggerChildren: 0.1,
+      },
+    },
   };
 
   const itemVariants = {
@@ -67,70 +99,91 @@ const Services = () => {
     visible: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.5 }
-    }
+      transition: {
+        duration: 0.5,
+      },
+    },
   };
 
   return (
-    <section id="services" className="py-12 sm:py-20 px-4 sm:px-6 bg-gray-50" ref={ref}>
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
+      <div className="container py-16 md:py-24">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-          transition={{ duration: 0.6 }}
-          className="text-center px-4"
-        >
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 mb-3 sm:mb-4">Our Services</h2>
-          <p className="text-base sm:text-lg text-gray-600 mb-8 sm:mb-12 max-w-2xl mx-auto">
-            We deliver cutting-edge technology solutions that transform businesses and create exceptional digital experiences
-          </p>
-        </motion.div>
-        
-        <motion.div 
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8"
+          ref={ref}
           variants={containerVariants}
           initial="hidden"
           animate={inView ? "visible" : "hidden"}
+          className="text-center mb-16"
+        >
+          <motion.h1 variants={itemVariants} className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+            Our <span className="text-blue-600">Services</span>
+          </motion.h1>
+          <motion.p variants={itemVariants} className="text-lg text-gray-600 max-w-2xl mx-auto">
+            We offer a comprehensive range of software development services to help your business thrive in the digital age.
+          </motion.p>
+        </motion.div>
+
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          animate={inView ? "visible" : "hidden"}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
         >
           {services.map((service, index) => (
-            <motion.div 
-              key={index} 
+            <motion.div
+              key={index}
               variants={itemVariants}
-              className="service-card bg-white p-5 sm:p-6 md:p-8 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden flex flex-col h-full"
+              className="group bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden"
             >
-              <div className="text-3xl sm:text-4xl mb-3 sm:mb-4">{service.icon}</div>
-              <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-2 sm:mb-3">{service.title}</h3>
-              <p className="text-sm sm:text-base text-gray-600 mb-4">{service.description}</p>
-              
-              <div className="mt-auto">
-                <div className="mt-3 sm:mt-4 mb-4 sm:mb-6">
-                  <ul className="space-y-2">
-                    {service.features.map((feature, idx) => (
-                      <li key={idx} className="flex items-center text-sm sm:text-base text-gray-700">
-                        <svg className="w-4 h-4 text-green-500 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                        </svg>
-                        <span>{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
+              <div className="p-8">
+                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-6 group-hover:bg-blue-600 transition-colors duration-300">
+                  <service.icon className="w-6 h-6 text-blue-600 group-hover:text-white transition-colors duration-300" />
                 </div>
-                
-                <a 
-                  href="#contact" 
-                  className="inline-flex items-center text-blue-600 font-medium hover:text-blue-800 transition-colors group text-sm sm:text-base"
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">
+                  {service.title}
+                </h3>
+                <p className="text-gray-600 mb-6">
+                  {service.description}
+                </p>
+                <ul className="space-y-3">
+                  {service.features.map((feature, featureIndex) => (
+                    <li key={featureIndex} className="flex items-center text-gray-600">
+                      <svg className="w-5 h-5 text-blue-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                      </svg>
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="px-8 py-4 bg-gray-50 border-t border-gray-100">
+                <a
+                  href="/contact"
+                  className="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium"
                 >
-                  {service.cta}
-                  <svg className="ml-2 w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                  Learn More
+                  <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
                   </svg>
                 </a>
               </div>
             </motion.div>
           ))}
         </motion.div>
+
+        <motion.div
+          variants={itemVariants}
+          className="mt-16 text-center"
+        >
+          <a
+            href="/contact"
+            className="inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors duration-300"
+          >
+            Get Started
+          </a>
+        </motion.div>
       </div>
-    </section>
+    </div>
   );
 };
 
