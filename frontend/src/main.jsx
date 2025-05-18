@@ -6,8 +6,6 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import './index.css';
 import './styles/global.css';
 import SEOHead from './components/SEOHead';
-import { ThemeProvider } from './contexts/ThemeContext';
-
 // Import components with lazy loading
 const Header = lazy(() => import('./pages/header'));
 const Hero = lazy(() => import('./pages/hero'));
@@ -47,15 +45,13 @@ const HomePage = () => {
 };
 
 const App = () => (
-  <ThemeProvider>
-    <Router>
-      <HelmetProvider>
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-        </Routes>
-      </HelmetProvider>
-    </Router>
-  </ThemeProvider>
+  <Router>
+    <HelmetProvider>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+      </Routes>
+    </HelmetProvider>
+  </Router>
 );
 
 ReactDOM.createRoot(document.getElementById('root')).render(
