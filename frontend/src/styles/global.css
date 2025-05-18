@@ -8,11 +8,11 @@
   }
 
   body {
-    @apply antialiased text-gray-900 bg-gradient-to-br from-white to-gray-50 font-sans min-h-screen;
+    @apply antialiased text-gray-900 bg-gradient-to-br from-indigo-50 to-purple-50 font-sans min-h-screen;
   }
 
   h1 {
-    @apply text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600;
+    @apply text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-indigo-600;
   }
 
   h2 {

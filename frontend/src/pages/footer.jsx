@@ -76,9 +76,9 @@ const Footer = () => {
       </div>
 
       {/* Main footer content */}
-      <div className="py-16 px-6">
+      <div className="py-8 sm:py-16 px-4 sm:px-6">
         <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 lg:gap-12">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-6 lg:gap-12">
             {/* Logo and company info */}
             <div className="flex flex-col space-y-4">
               <img src={logo} alt="TechCube Logo" className="h-16 w-auto" />

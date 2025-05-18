@@ -83,7 +83,7 @@ const Header = () => {
           onClick={() => setMobileMenuOpen(false)}
         />
 
-        <div className="relative z-50 bg-white shadow-xl h-[100vh] flex flex-col">
+        <div className="relative z-50 bg-white/95 backdrop-blur-sm shadow-xl h-[100vh] flex flex-col">
           <div className="flex gap-2 items-center justify-between px-6 py-4 bg-white shadow-md mb-5">
             <div className="flex items-center gap-1">
               <img src={logo} alt="TechCube Logo" className="h-9 w-9" />
@@ -114,12 +114,12 @@ const Header = () => {
             </button>
           </div>
 
-          <nav className="px-6 pb-6 space-y-5 overflow-y-auto">
+          <nav className="px-4 pb-4 space-y-3 overflow-y-auto">
             {['Home', 'Services', 'Expertise', 'Contact'].map((item) => (
               <a
                 key={item}
                 href={`#${item.toLowerCase()}`}
-                className="block text-lg text-gray-700 font-medium hover:text-blue-600 border-b border-gray-100 pb-3"
+                className="block text-lg text-gray-700 font-medium hover:text-purple-600 border-b border-gray-100 pb-3 transition-colors"
                 onClick={(e) => {
                   e.preventDefault();
                   const section = document.querySelector(e.currentTarget.getAttribute('href'));
