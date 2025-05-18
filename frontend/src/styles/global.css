@@ -8,16 +8,15 @@
   }
 
   body {
-    @apply antialiased text-gray-900 bg-white;
+    @apply antialiased text-gray-900 bg-white font-sans;
   }
 
-  /* Improved heading hierarchy */
   h1 {
-    @apply text-4xl sm:text-5xl md:text-6xl font-bold;
+    @apply text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight;
   }
 
   h2 {
-    @apply text-3xl sm:text-4xl md:text-5xl font-bold;
+    @apply text-3xl sm:text-4xl font-bold tracking-tight;
   }
 
   h3 {
@@ -33,7 +32,7 @@
 @layer components {
   /* Enhanced responsive utilities */
   .container-responsive {
-    @apply w-full mx-auto px-4 sm:px-6 lg:px-8 max-w-[90rem];
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
   }
 
   /* Common button styles with better mobile touch targets */
@@ -42,11 +41,11 @@
   }
 
   .btn-primary {
-    @apply text-white bg-blue-600 hover:bg-blue-700;
+    @apply inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200;
   }
 
   .btn-secondary {
-    @apply text-blue-600 bg-white hover:bg-gray-50 border-blue-600;
+    @apply inline-flex items-center px-6 py-3 border border-gray-300 text-base font-medium rounded-lg shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200;
   }
 
   /* Form elements */
@@ -108,6 +107,18 @@
 
   .section-wrapper {
     @apply w-full flex flex-col items-center justify-center py-8 md:py-16;
+  }
+
+  .card {
+    @apply bg-white rounded-xl shadow-lg p-6 transition-all duration-200 hover:shadow-xl hover:-translate-y-1;
+  }
+
+  .section-padding {
+    @apply py-16 sm:py-24;
+  }
+
+  .gradient-text {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600;
   }
 }
 
@@ -244,4 +255,14 @@ h3 {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
 }

@@ -1,4 +1,3 @@
-
 import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 import {
@@ -85,102 +84,60 @@ const Services = () => {
     threshold: 0.1,
   });
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-      },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: 0.5,
-      },
-    },
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
-      <div className="container py-16 md:py-24">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white section-padding">
+      <div className="container-responsive">
         <motion.div
-          ref={ref}
-          variants={containerVariants}
-          initial="hidden"
-          animate={inView ? "visible" : "hidden"}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
           className="text-center mb-16"
         >
-          <motion.h1 variants={itemVariants} className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-            Our <span className="text-blue-600">Services</span>
-          </motion.h1>
-          <motion.p variants={itemVariants} className="text-lg text-gray-600 max-w-2xl mx-auto">
+          <h1 className="gradient-text mb-6">Our Services</h1>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
             We offer a comprehensive range of software development services to help your business thrive in the digital age.
-          </motion.p>
+          </p>
         </motion.div>
 
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate={inView ? "visible" : "hidden"}
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 auto-rows-fr"
-        >
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8" ref={ref}>
           {services.map((service, index) => (
             <motion.div
               key={index}
-              variants={itemVariants}
-              className="group bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden"
+              initial={{ opacity: 0, y: 20 }}
+              animate={inView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
+              className="card group"
             >
-              <div className="p-8">
-                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-6 group-hover:bg-blue-600 transition-colors duration-300">
-                  <service.icon className="w-6 h-6 text-blue-600 group-hover:text-white transition-colors duration-300" />
-                </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-3">
-                  {service.title}
-                </h3>
-                <p className="text-gray-600 mb-6">
-                  {service.description}
-                </p>
-                <ul className="space-y-3">
-                  {service.features.map((feature, featureIndex) => (
-                    <li key={featureIndex} className="flex items-center text-gray-600">
-                      <svg className="w-5 h-5 text-blue-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                      </svg>
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
+              <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-6 group-hover:bg-blue-600 transition-colors duration-300">
+                <service.icon className="w-6 h-6 text-blue-600 group-hover:text-white transition-colors duration-300" />
               </div>
-              <div className="px-8 py-4 bg-gray-50 border-t border-gray-100">
-                <a
-                  href="/contact"
-                  className="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium"
-                >
-                  Learn More
-                  <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                  </svg>
-                </a>
-              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">{service.title}</h3>
+              <p className="text-gray-600 mb-6">{service.description}</p>
+              <ul className="space-y-3">
+                {service.features.map((feature, featureIndex) => (
+                  <li key={featureIndex} className="flex items-center text-gray-600">
+                    <svg className="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    {feature}
+                  </li>
+                ))}
+              </ul>
             </motion.div>
           ))}
-        </motion.div>
+        </div>
 
         <motion.div
-          variants={itemVariants}
+          initial={{ opacity: 0, y: 20 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.5, delay: 0.6 }}
           className="mt-16 text-center"
         >
-          <a
-            href="/contact"
-            className="inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors duration-300"
-          >
+          <a href="/contact" className="btn-primary">
             Get Started
+            <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+            </svg>
           </a>
         </motion.div>
       </div>
