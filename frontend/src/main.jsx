@@ -309,8 +309,9 @@ const HomePage = () => {
 };
 
 const App = () => (
-  <Router>
-    <HelmetProvider>
+  <ThemeProvider>
+    <Router>
+      <HelmetProvider>
       <div className="page-container">
         <Routes>
           <Route path="/" element={<HomePage />} />
@@ -318,7 +319,8 @@ const App = () => (
         </Routes>
       </div>
     </HelmetProvider>
-  </Router>
+    </Router>
+  </ThemeProvider>
 );
 
 ReactDOM.createRoot(document.getElementById('root')).render(
