@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 
 const Hero = () => {
   return (
-    <section id="home" className="gradient-bg min-h-[100svh] flex items-center justify-center relative overflow-hidden">
+    <section id="home" className="hero-section">
       {/* Animated background elements */}
       <div className="absolute inset-0">
         <div className="absolute top-20 left-10 w-32 sm:w-64 h-32 sm:h-64 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob"></div>
