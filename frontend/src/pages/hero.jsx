@@ -2,15 +2,15 @@ import { motion } from 'framer-motion';
 
 const Hero = () => {
   return (
-    <section id="home" className="gradient-bg min-h-screen flex items-center justify-center relative overflow-hidden">
+    <section id="home" className="gradient-bg min-h-[100svh] flex items-center justify-center relative overflow-hidden">
       {/* Animated background elements */}
       <div className="absolute inset-0">
         <div className="absolute top-20 left-10 w-32 sm:w-64 h-32 sm:h-64 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob"></div>
         <div className="absolute top-40 right-10 w-40 sm:w-72 h-40 sm:h-72 bg-purple-400 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-2000"></div>
         <div className="absolute bottom-20 left-1/3 w-48 sm:w-80 h-48 sm:h-80 bg-green-400 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-4000"></div>
       </div>
-      
-      <div className="max-w-5xl mx-auto text-center z-10 px-4 sm:px-6 pt-16 pb-20 sm:pb-0 hero-content">
+
+      <div className="w-full max-w-4xl mx-auto text-center safe-area-inset-bottom px-4 sm:px-6 pt-16 sm:pt-20 pb-20 sm:pb-0 hero-content">
         <motion.h1 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -22,7 +22,7 @@ const Hero = () => {
             Powerful Solutions
           </span>
         </motion.h1>
-        
+
         <motion.p 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -31,7 +31,7 @@ const Hero = () => {
         >
           Your strategic technology partner for custom software development, AI solutions, and digital transformation
         </motion.p>
-        
+
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -51,7 +51,7 @@ const Hero = () => {
             Start Your Project
           </a>
         </motion.div>
-        
+
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -76,7 +76,7 @@ const Hero = () => {
           </div> */}
         </motion.div>
       </div>
-      
+
       {/* Scroll indicator */}
       <motion.div
         initial={{ opacity: 0 }}

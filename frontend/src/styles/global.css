@@ -31,9 +31,14 @@
 }
 
 @layer components {
-  /* Common button styles */
+  /* Enhanced responsive utilities */
+  .container-responsive {
+    @apply w-full mx-auto px-4 sm:px-6 lg:px-8 max-w-[90rem];
+  }
+
+  /* Common button styles with better mobile touch targets */
   .btn {
-    @apply inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm transition-colors duration-200;
+    @apply inline-flex items-center justify-center px-4 sm:px-6 py-3 sm:py-3 border border-transparent text-sm sm:text-base font-medium rounded-md shadow-sm transition-all duration-200 touch-manipulation;
   }
 
   .btn-primary {

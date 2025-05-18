@@ -1,3 +1,6 @@
+Enhance the services grid responsiveness by modifying the grid-cols and gap classes.
+```
+```replit_final_file
 import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 import {
@@ -127,7 +130,7 @@ const Services = () => {
           variants={containerVariants}
           initial="hidden"
           animate={inView ? "visible" : "hidden"}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 auto-rows-fr"
         >
           {services.map((service, index) => (
             <motion.div
