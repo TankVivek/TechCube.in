@@ -1,6 +1,4 @@
-Enhance the services grid responsiveness by modifying the grid-cols and gap classes.
-```
-```replit_final_file
+
 import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 import {
