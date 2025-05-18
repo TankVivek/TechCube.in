@@ -1,9 +1,12 @@
+
 import React, { useEffect, lazy, Suspense } from 'react';
 import ReactDOM from 'react-dom/client';
 import { HelmetProvider } from 'react-helmet-async';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import './index.css';
 import './styles/global.css';
 import SEOHead from './components/SEOHead';
+import { ThemeProvider } from './contexts/ThemeContext';
 
 // Import components with lazy loading
 const Header = lazy(() => import('./pages/header'));
@@ -13,18 +16,15 @@ const AISolutions = lazy(() => import('./pages/aISolutions'));
 const Contact = lazy(() => import('./pages/contact'));
 const Footer = lazy(() => import('./pages/footer'));
 
-// Loading spinner component
 const LoadingSpinner = () => (
-  <div className="fixed inset-0 flex items-center justify-center bg-white z-50">
-    <div className="loader"></div>
+  <div className="fixed inset-0 flex items-center justify-center">
+    <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-blue-500"></div>
   </div>
 );
 
 const PageWrapper = ({ children }) => (
-  <div className="page-container">
-    <div className="page-content">
-      <div className="content-wrapper">{children}</div>
-    </div>
+  <div className="min-h-screen bg-white dark:bg-gray-900">
+    <div className="container mx-auto px-4">{children}</div>
   </div>
 );
 
@@ -47,15 +47,15 @@ const HomePage = () => {
 };
 
 const App = () => (
-  <Router>
-    <HelmetProvider>
-      <div className="page-container">
+  <ThemeProvider>
+    <Router>
+      <HelmetProvider>
         <Routes>
           <Route path="/" element={<HomePage />} />
         </Routes>
-      </div>
-    </HelmetProvider>
-  </Router>
+      </HelmetProvider>
+    </Router>
+  </ThemeProvider>
 );
 
 ReactDOM.createRoot(document.getElementById('root')).render(
