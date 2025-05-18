@@ -39,7 +39,8 @@ const AISolutions = () => {
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.2
+        staggerChildren: 0.15,
+        delayChildren: 0.1
       }
     }
   };
@@ -49,7 +50,10 @@ const AISolutions = () => {
     visible: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.5 }
+      transition: { 
+        duration: 0.4,
+        ease: [0.25, 0.1, 0.25, 1]
+      }
     }
   };
 
@@ -85,7 +89,7 @@ const AISolutions = () => {
                 <div className="text-4xl mb-4">{solution.icon}</div>
                 <h3 className="text-xl font-bold text-gray-800 mb-3">{solution.title}</h3>
                 <p className="text-gray-600 mb-4">{solution.description}</p>
-                
+
                 <div className="mt-4">
                   <h4 className="text-sm font-semibold text-gray-700 mb-2">Key Benefits:</h4>
                   <ul className="space-y-1">
@@ -103,7 +107,7 @@ const AISolutions = () => {
             </motion.div>
           ))}
         </motion.div>
-        
+
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}

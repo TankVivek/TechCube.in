@@ -55,7 +55,7 @@ const Hero = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.6, ease: "easeOut" }}
+          transition={{ duration: 0.5, delay: 0.2, ease: [0.645, 0.045, 0.355, 1] }}
           className="mt-12 sm:mt-16"
         >
           {/* <p className="text-blue-200 mb-4">Trusted by innovative companies</p> */}
