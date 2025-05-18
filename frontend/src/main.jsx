@@ -3,8 +3,8 @@ import React, { useEffect, lazy, Suspense } from 'react';
 import ReactDOM from 'react-dom/client';
 import { HelmetProvider } from 'react-helmet-async';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import './index.css';
 import './styles/global.css';
+import './index.css';
 import SEOHead from './components/SEOHead';
 // Import components with lazy loading
 const Header = lazy(() => import('./pages/header'));
