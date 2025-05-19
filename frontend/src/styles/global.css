@@ -13,16 +13,28 @@
     box-sizing: border-box;
   }
 
-  .main {
-    margin: 0 !important;
-    padding: 0 !important;
+  * {
+    margin: 0;
+    padding: 0;
     box-sizing: border-box;
+  }
+
+  .main {
+    margin: 0;
+    padding: 0;
     width: 100vw;
     overflow-x: hidden;
   }
 
   body {
-    @apply antialiased text-gray-900 bg-gradient-to-br from-indigo-50 to-purple-50 font-sans min-h-screen w-full overflow-x-hidden m-0 p-0;
+    @apply antialiased text-gray-900 bg-gradient-to-br from-indigo-50 to-purple-50 font-sans min-h-screen w-screen overflow-x-hidden;
+  }
+
+  .container {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
   }
 
   h1 {
