@@ -1,8 +1,18 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import path from "path";
 
 export default defineConfig({
   plugins: [react()],
+  resolve: {
+    alias: {
+      // Ensure Vite can resolve the heroicons import correctly.
+      "@heroicons/react/24/outline": path.resolve(
+        __dirname,
+        "node_modules/@heroicons/react/24/outline"
+      ),
+    },
+  },
   server: {
     host: true,
     port: parseInt(process.env.PORT || "5173", 10),
