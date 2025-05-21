@@ -3,39 +3,13 @@
 @tailwind utilities;
 
 @layer base {
-  html {
-    scroll-behavior: smooth;
-  }
 
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
-
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
-
-  .main {
-    margin: 0;
-    padding: 0;
-    width: 100vw;
-    overflow-x: hidden;
-  }
-
-  body {
-    @apply antialiased text-gray-900 bg-gradient-to-br from-indigo-50 to-purple-50 font-sans min-h-screen w-screen overflow-x-hidden;
-  }
-
-  .container {
-    width: 100%;
-    max-width: 100%;
-    margin: 0;
-    padding: 0;
-  }
+html, body {
+  padding: 0px !important;
+  margin: 0px !important;
+  width: 100% !important;
+  min-height: 100vh !important;
+}
 
   h1 {
     @apply text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-indigo-600;
@@ -50,17 +24,12 @@
   }
 
   /* Responsive container */
-  .container {
-    @apply max-w-7xl mx-auto px-6 sm:px-12 lg:px-16;
-  }
+
 }
 
 @layer components {
 
   /* Enhanced responsive utilities */
-  .container-responsive {
-    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
-  }
 
   /* Common button styles with better mobile touch targets */
   .btn {
@@ -234,7 +203,7 @@ h1 {
 }
 
 .hero-section {
-  @apply min-h-screen bg-gradient-to-br from-blue-900 to-purple-900 flex items-center justify-center text-white px-4 pt-16;
+  @apply min-h-screen bg-gradient-to-br from-blue-900 to-purple-900 flex items-center justify-center text-white;
 }
 
 h2 {
@@ -250,9 +219,7 @@ h3 {
   @apply py-16 sm:py-24;
 }
 
-.section-sm {
-  @apply py-8 sm:py-16;
-}
+
 
 /* Grid */
 .grid-auto-fit {
@@ -320,4 +287,12 @@ h3 {
   100% {
     transform: translateY(0px);
   }
+}
+
+.container {
+  max-width: none !important;
+  margin-right: 0 !important;
+  margin-left: 0 !important;
+  padding-right: 0 !important;
+  padding-left: 0 !important;
 }
