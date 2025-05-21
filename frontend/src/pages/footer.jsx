@@ -3,7 +3,7 @@ import logo from '../../public/logo-white.png';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
-
+  
   return (
     <footer className="bg-gray-900 text-gray-300">
       {/* Newsletter Section */}
@@ -60,7 +60,7 @@ const Footer = () => {
                   ['AI Solutions', '#ai-solutions'],
                   ['Backend Architecture', '#services'],
                   ['DevOps & CI/CD', '#services'],
-                  ['E-commerce Solutions', '#services'],
+                  ['E-commerce Solutions', '#services']
                 ].map(([label, url]) => (
                   <li key={label}>
                     <a
@@ -84,7 +84,7 @@ const Footer = () => {
                   ['Industries', '#industries'],
                   ['Blog', '/blog'],
                   ['Careers', '/careers'],
-                  ['Contact', '#contact'],
+                  ['Contact', '#contact']
                 ].map(([label, url]) => (
                   <li key={label}>
                     {url.startsWith('/') ? (
