@@ -172,10 +172,7 @@ const Expertise = () => {
       name: "Backend Architecture",
       skills: ["Microservices", "RESTful APIs", "JWT Auth", "PostgreSQL", "MongoDB", "MySQL", "Redis", "Docker", "AWS"]
     },
-    {
-      name: "Mobile Development",
-      skills: ["React Native", "Flutter", "Android (Kotlin)", "iOS (Swift)", "Push Notifications", "Camera & File Access", "Payment Gateway Integration"]
-    },
+
     {
       name: "DevOps & CI/CD",
       skills: ["GitHub Actions", "Jenkins", "Docker", "AWS CodeDeploy", "Linux Server Management", "CI/CD Pipelines", "Nginx"]
