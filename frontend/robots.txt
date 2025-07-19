@@ -1,3 +1,3 @@
-User-agent: *
-Allow: /
-Sitemap: https://techcube.in/sitemap.xml
+user-agent: *
+allow: /
+sitemap: https://techcube.in/sitemap.xml
