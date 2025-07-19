@@ -34,7 +34,13 @@ app.get("/health", (req, res) => {
 // Serve static files from the frontend build directory
 app.use(express.static(path.join(__dirname, "../frontend/dist")));
 
-// Serve index.html for all non-API, non-static routes (let React Router handle them)
+// Serve robots.txt as plain text
+app.get('/robots.txt', (req, res) => {
+    res.type('text/plain');
+    res.sendFile(path.join(__dirname, '../frontend/robots.txt'));
+});
+
+// Catch-all: serve React app for all other routes
 app.get('*', (req, res) => {
     if (req.path.startsWith('/api')) return res.status(404).json({ success: false, error: 'Endpoint not found' });
     res.sendFile(path.join(__dirname, '../frontend/dist/index.html'));
@@ -48,12 +54,6 @@ app.get(/^\/index\.php(\/.*)?$/, (req, res) => {
 // Serve /index.php as the React app homepage
 app.get('/index.php', (req, res) => {
     res.sendFile(path.join(__dirname, '../frontend/dist/index.html'));
-});
-
-// Serve robots.txt as plain text
-app.get('/robots.txt', (req, res) => {
-    res.type('text/plain');
-    res.sendFile(path.join(__dirname, '../frontend/robots.txt'));
 });
 
 const PORT = process.env.PORT || 3000;
