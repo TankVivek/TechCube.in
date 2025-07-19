@@ -39,7 +39,7 @@ const Footer = () => {
             {/* Logo and Company Info */}
             <div className="flex flex-col space-y-3 items-center sm:items-start">
               <div className="mb-2 transform hover:scale-105 transition-transform duration-300">
-                <img src="/logo-white.png" alt="TechCube Logo" className="h-16 w-auto rounded-xl p-2 shadow" />
+                <img src="/logo-white.png" alt="TechCube Official Logo - Footer" className="h-16 w-auto rounded-xl p-2 shadow" />
               </div>
               {/* <p className="text-gray-400 leading-relaxed text-center sm:text-left text-xl">
                 Building tomorrow's digital solutions today with cutting‐edge technology and innovative approaches.
@@ -140,9 +140,9 @@ const Footer = () => {
             <p>&copy; {currentYear} TechCube. All rights reserved.</p>
             <div className="mt-4 md:mt-0">
               <ul className="flex flex-wrap justify-center gap-4 md:gap-8">
-                <li><a href="#" className="hover:text-white transition-colors focus:outline-none focus:text-blue-400">Privacy Policy</a></li>
-                <li><a href="#" className="hover:text-white transition-colors focus:outline-none focus:text-blue-400">Terms of Service</a></li>
-                <li><a href="#" className="hover:text-white transition-colors focus:outline-none focus:text-blue-400">Cookie Policy</a></li>
+                <li><a href="#" aria-label="Privacy Policy" className="text-gray-200 hover:text-white transition-colors focus:outline-none focus:text-blue-400">Privacy Policy</a></li>
+                <li><a href="#" aria-label="Terms of Service" className="text-gray-200 hover:text-white transition-colors focus:outline-none focus:text-blue-400">Terms of Service</a></li>
+                <li><a href="#" aria-label="Cookie Policy" className="text-gray-200 hover:text-white transition-colors focus:outline-none focus:text-blue-400">Cookie Policy</a></li>
               </ul>
             </div>
           </div>

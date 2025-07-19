@@ -12,7 +12,7 @@ const RobotsTxt = () => {
 
   return (
     <div style={{ whiteSpace: "pre-wrap", background: "#222", color: "#fff", padding: "2rem", borderRadius: "8px" }}>
-      <h2>robots.txt</h2>
+      <h2 aria-label="robots.txt file contents">robots.txt</h2>
       <pre>{content}</pre>
     </div>
   );

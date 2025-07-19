@@ -99,7 +99,7 @@ function Header() {
           transition={{ duration: 0.6, ease: "easeOut" }}
           className="flex items-center gap-3"
         >
-          <img src={logo} alt="TechCube Logo" style={isDark ? { background: '#111827' } : { background: '#ffffff' }}  className="h-10 w-10 rounded-full shadow" />
+          <img src={logo} alt="TechCube Logo - Header" style={isDark ? { background: '#111827' } : { background: '#ffffff' }}  className="h-10 w-10 rounded-full shadow" />
           <div className="flex flex-col">
             <span className="font-bold text-xl text-gray-900 dark:text-white">TechCube</span>
             <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">Innovation Hub</span>
@@ -179,7 +179,7 @@ function Header() {
                 <div className="flex items-center gap-3">
                 <img
                   src={logo}
-                  alt="TechCube Logo"
+                  alt="TechCube Logo - Header Mobile Menu"
                   style={isDark ? { background: '#111827' } : { background: '#ffffff' }}
                   className="h-10 w-10 shadow"
                 />
