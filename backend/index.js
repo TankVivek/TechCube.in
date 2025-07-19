@@ -40,6 +40,12 @@ app.get('/robots.txt', (req, res) => {
     res.sendFile(path.join(__dirname, '../frontend/robots.txt'));
 });
 
+// Serve sitemap.xml as application/xml
+app.get('/sitemap.xml', (req, res) => {
+    res.type('application/xml');
+    res.sendFile(path.join(__dirname, '../frontend/sitemap.xml'));
+});
+
 // Catch-all: serve React app for all other routes
 app.get('*', (req, res) => {
     if (req.path.startsWith('/api')) return res.status(404).json({ success: false, error: 'Endpoint not found' });
