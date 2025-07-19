@@ -13,6 +13,7 @@ const Services = lazy(() => import("./pages/services"));
 const AISolutions = lazy(() => import("./pages/aISolutions"));
 const Contact = lazy(() => import("./pages/contact"));
 const Footer = lazy(() => import("./pages/footer"));
+import RobotsTxt from "./pages/RobotsTxt";
 
 const LoadingSpinner = () => (
   <div className="fixed inset-0 flex items-center justify-center">
@@ -51,6 +52,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/index.php" element={<Navigate to="/" replace />} />
+          <Route path="/robots" element={<RobotsTxt />} />
           <Route path="*" element={<HomePage />} />
         </Routes>
       </HelmetProvider>

@@ -50,6 +50,12 @@ app.get('/index.php', (req, res) => {
     res.sendFile(path.join(__dirname, '../frontend/dist/index.html'));
 });
 
+// Serve robots.txt as plain text
+app.get('/robots.txt', (req, res) => {
+    res.type('text/plain');
+    res.sendFile(path.join(__dirname, '../frontend/robots.txt'));
+});
+
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
