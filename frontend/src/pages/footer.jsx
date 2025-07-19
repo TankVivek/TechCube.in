@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom';
-import logo from '../../public/logo-white.png';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -40,7 +39,7 @@ const Footer = () => {
             {/* Logo and Company Info */}
             <div className="flex flex-col space-y-3 items-center sm:items-start">
               <div className="mb-2 transform hover:scale-105 transition-transform duration-300">
-                <img src={logo} alt="TechCube Logo" className="h-16 w-auto rounded-xl p-2 shadow" />
+                <img src="/logo-white.png" alt="TechCube Logo" className="h-16 w-auto rounded-xl p-2 shadow" />
               </div>
               {/* <p className="text-gray-400 leading-relaxed text-center sm:text-left text-xl">
                 Building tomorrow's digital solutions today with cutting‐edge technology and innovative approaches.
