@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const path = require("path");
 require("dotenv").config();
+const fs = require('fs');
 
 // Import routes
 const emailRoutes = require("./src/routes/email.routes");
@@ -33,9 +34,15 @@ app.get("/health", (req, res) => {
 // Serve static files from the frontend build directory
 app.use(express.static(path.join(__dirname, "../frontend/dist")));
 
-// Handle client-side routing
-app.get("*", (req, res) => {
-    res.sendFile(path.join(__dirname, "../frontend/dist/index.html"));
+// Serve index.html for all non-API, non-static routes (let React Router handle them)
+app.get('*', (req, res) => {
+    if (req.path.startsWith('/api')) return res.status(404).json({ success: false, error: 'Endpoint not found' });
+    res.sendFile(path.join(__dirname, '../frontend/dist/index.html'));
+});
+
+// Redirect /index.php and any path starting with /index.php to /
+app.get(/^\/index\.php(\/.*)?$/, (req, res) => {
+    res.redirect(301, '/');
 });
 
 // Serve /index.php as the React app homepage
