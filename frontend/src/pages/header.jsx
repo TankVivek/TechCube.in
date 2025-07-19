@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import logo from "../assets/logo-small.png";
+import logo from "../assets/logo-square.png";
 import { useTheme } from "../contexts/ThemeContext";
 
 // SVGs for theme toggle

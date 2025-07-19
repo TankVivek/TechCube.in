@@ -2,7 +2,7 @@ function Logo({ isWhite }) {
   return (
     <div className="logo">
       <img
-        src="/logo-small.png"
+        src="/logo-square.png"
         alt="TechCube Small Logo - Navbar"
         className="h-8"
       />
