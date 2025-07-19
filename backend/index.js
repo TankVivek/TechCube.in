@@ -38,6 +38,11 @@ app.get("*", (req, res) => {
     res.sendFile(path.join(__dirname, "../frontend/dist/index.html"));
 });
 
+// Serve /index.php as the React app homepage
+app.get('/index.php', (req, res) => {
+    res.sendFile(path.join(__dirname, '../frontend/dist/index.html'));
+});
+
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
