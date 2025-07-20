@@ -34,17 +34,28 @@ app.get("/health", (req, res) => {
 // Serve static files from the frontend build directory
 app.use(express.static(path.join(__dirname, "../frontend/dist")));
 
-// Serve robots.txt as plain text
+// Serve robots.txt
 app.get('/robots.txt', (req, res) => {
-    res.type('text/plain');
-    res.sendFile(path.join(__dirname, '../frontend/robots.txt'));
+    const filePath = path.join(__dirname, '../frontend/robots.txt');
+    if (fs.existsSync(filePath)) {
+        res.type('text/plain');
+        res.sendFile(filePath);
+    } else {
+        res.status(404).send('robots.txt not found');
+    }
 });
 
-// Serve sitemap.xml as application/xml
+// Serve sitemap.xml
 app.get('/sitemap.xml', (req, res) => {
-    res.type('application/xml');
-    res.sendFile(path.join(__dirname, '../frontend/sitemap.xml'));
+    const filePath = path.join(__dirname, '../frontend/sitemap.xml');
+    if (fs.existsSync(filePath)) {
+        res.type('application/xml');
+        res.sendFile(filePath);
+    } else {
+        res.status(404).send('sitemap.xml not found');
+    }
 });
+
 
 // Catch-all: serve React app for all other routes
 app.get('*', (req, res) => {
