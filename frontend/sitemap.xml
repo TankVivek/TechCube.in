@@ -1,20 +1,64 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="/sitemap.xsl"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://techcube.in/</loc>
     <priority>1.0</priority>
+    <changefreq>daily</changefreq>
+    <lastmod>2024-06-11</lastmod>
   </url>
   <url>
     <loc>https://techcube.in/services</loc>
     <priority>0.8</priority>
+    <changefreq>weekly</changefreq>
+    <lastmod>2024-06-11</lastmod>
   </url>
   <url>
     <loc>https://techcube.in/ai-solutions</loc>
     <priority>0.8</priority>
+    <changefreq>weekly</changefreq>
+    <lastmod>2024-06-11</lastmod>
   </url>
   <url>
     <loc>https://techcube.in/contact</loc>
     <priority>0.7</priority>
+    <changefreq>monthly</changefreq>
+    <lastmod>2024-06-11</lastmod>
   </url>
-  <!-- Add more URLs as needed -->
+  <url>
+    <loc>https://techcube.in/about</loc>
+    <priority>0.7</priority>
+    <changefreq>monthly</changefreq>
+    <lastmod>2024-06-11</lastmod>
+  </url>
+  <url>
+    <loc>https://techcube.in/careers</loc>
+    <priority>0.6</priority>
+    <changefreq>monthly</changefreq>
+    <lastmod>2024-06-11</lastmod>
+  </url>
+  <url>
+    <loc>https://techcube.in/portfolio</loc>
+    <priority>0.7</priority>
+    <changefreq>monthly</changefreq>
+    <lastmod>2024-06-11</lastmod>
+  </url>
+  <url>
+    <loc>https://techcube.in/blog</loc>
+    <priority>0.6</priority>
+    <changefreq>weekly</changefreq>
+    <lastmod>2024-06-11</lastmod>
+  </url>
+  <url>
+    <loc>https://techcube.in/privacy-policy</loc>
+    <priority>0.5</priority>
+    <changefreq>yearly</changefreq>
+    <lastmod>2024-06-11</lastmod>
+  </url>
+  <url>
+    <loc>https://techcube.in/terms</loc>
+    <priority>0.5</priority>
+    <changefreq>yearly</changefreq>
+    <lastmod>2024-06-11</lastmod>
+  </url>
 </urlset>
