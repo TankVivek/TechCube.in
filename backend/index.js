@@ -1,30 +1,53 @@
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
+const compression = require("compression");
 require("dotenv").config();
 const fs = require('fs');
 
 // Import routes
 const emailRoutes = require("./src/routes/email.routes");
 
+// Import security middleware
+const { 
+    createRateLimiter, 
+    emailRateLimiter, 
+    securityHeaders, 
+    sanitizeInput 
+} = require("./src/middleware/security");
+
+// Import error handling middleware
+const { errorHandler, notFound } = require("./src/middleware/errorHandler");
+
 const app = express();
 
-// Middleware
-app.use(
-    cors({
-        origin:
-            process.env.CORS_ORIGIN ||
-            "http://localhost:3000" ||
-            "https://techcube.in" ||
-            "*",
-        methods: ["GET", "POST"],
-        credentials: true,
-    }),
-);
-app.use(express.json());
+// Security middleware
+app.use(securityHeaders);
+app.use(compression());
 
-// API Routes
-app.use("/api/email", emailRoutes);
+// CORS configuration
+const corsOptions = {
+    origin: process.env.CORS_ORIGIN 
+        ? process.env.CORS_ORIGIN.split(',') 
+        : ["http://localhost:3001", "https://techcube.in"],
+    methods: ["GET", "POST"],
+    credentials: true,
+    optionsSuccessStatus: 200
+};
+app.use(cors(corsOptions));
+
+// Rate limiting
+app.use(createRateLimiter());
+
+// Body parsing middleware
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Input sanitization
+app.use(sanitizeInput);
+
+// API Routes with rate limiting
+app.use("/api/email", emailRateLimiter, emailRoutes);
 
 // Health check endpoint
 app.get("/health", (req, res) => {
@@ -75,6 +98,11 @@ app.get('/index.php', (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 
+// Error handling middleware (must be last)
+app.use(notFound);
+app.use(errorHandler);
+
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
+    console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
 });
