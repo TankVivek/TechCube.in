@@ -58,7 +58,11 @@ export default function SupportWidget() {
     });
 
     socket.on('new_message', (msg) => {
-      setMessages(prev => [...prev, msg]);
+      setMessages(prev => {
+        const exists = prev.some(m => m.time === msg.time && m.text === msg.text && m.sender === msg.sender);
+        if (exists) return prev;
+        return [...prev, msg];
+      });
     });
 
     socket.on('agent_joined', () => setAgentOnline(true));

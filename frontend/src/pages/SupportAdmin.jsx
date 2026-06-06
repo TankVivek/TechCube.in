@@ -57,6 +57,9 @@ export default function SupportAdmin() {
   const login = (e) => {
     e.preventDefault();
     setError('');
+    // Disconnect old socket to prevent duplicate connection instances
+    socketRef.current?.disconnect();
+
     const socket = io(SOCKET_URL, { transports: ['websocket', 'polling'] });
     socketRef.current = socket;
 
@@ -79,7 +82,12 @@ export default function SupportAdmin() {
     // Listen for real-time updates
     socket.on('ticket_update', ({ ticketId, msg }) => {
       setSelected(prev => {
-        if (prev && prev.id === ticketId) return { ...prev, messages: [...prev.messages, msg] };
+        if (prev && prev.id === ticketId) {
+          // Prevent displaying duplicate messages in UI
+          const exists = prev.messages.some(m => m.time === msg.time && m.text === msg.text && m.sender === msg.sender);
+          if (exists) return prev;
+          return { ...prev, messages: [...prev.messages, msg] };
+        }
         return prev;
       });
       // Refresh ticket list
