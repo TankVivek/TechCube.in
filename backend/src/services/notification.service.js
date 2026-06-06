@@ -55,10 +55,18 @@ function registerToken(token) {
 
 // Send FCM Push Notification
 const sendFirebaseAlert = async (title, body) => {
-    if (!firebaseInitialized) return;
+    if (!firebaseInitialized) {
+        console.log("FCM: Skipping alert - Firebase Admin SDK not initialized (missing service account).");
+        return;
+    }
 
     const tokens = getTokens();
-    if (tokens.length === 0) return;
+    if (tokens.length === 0) {
+        console.log("FCM: Skipping alert - No registered admin tokens found in fcm_tokens.json.");
+        return;
+    }
+
+    console.log(`FCM: Attempting to send alert to ${tokens.length} token(s)...`);
 
     const message = {
         notification: { title, body },
@@ -67,20 +75,19 @@ const sendFirebaseAlert = async (title, body) => {
 
     try {
         const response = await admin.messaging().sendEachForMulticast(message);
-        console.log(`${response.successCount} FCM push notifications sent successfully.`);
+        console.log(`FCM: ${response.successCount} sent, ${response.failureCount} failed.`);
         
-        // Cleanup expired / invalid tokens
         if (response.failureCount > 0) {
             const activeTokens = [];
             response.responses.forEach((resp, idx) => {
                 if (resp.success) {
                     activeTokens.push(tokens[idx]);
                 } else {
+                    console.log(`FCM: Error sending to token ${idx}:`, resp.error.message);
                     const code = resp.error.code;
                     if (code === 'messaging/invalid-registration-token' || code === 'messaging/registration-token-not-registered') {
-                        console.log(`Removing expired FCM token: ${tokens[idx]}`);
+                        console.log(`FCM: Removing invalid/expired token: ${tokens[idx]}`);
                     } else {
-                        // Keep it for other errors
                         activeTokens.push(tokens[idx]);
                     }
                 }
@@ -88,7 +95,7 @@ const sendFirebaseAlert = async (title, body) => {
             saveTokens(activeTokens);
         }
     } catch (error) {
-        console.error("Error sending FCM notification:", error);
+        console.error("FCM: Critical error in sendFirebaseAlert:", error);
     }
 };
 
