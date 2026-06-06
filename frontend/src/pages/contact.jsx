@@ -1,10 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
-import axios from 'axios';
+import { emailAPI } from '../utils/api';
 import { ArrowRightIcon } from '@heroicons/react/24/outline';
-
-const API = import.meta.env.VITE_API_URL || '';
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -42,21 +40,17 @@ const Contact = () => {
     };
   }, [formStatus]);
 
-  // Update handleSubmit to use loading state
+  // Update handleSubmit to use standardized API utility
   const handleSubmit = async (e) => {
     e.preventDefault();
     setFormStatus(null);
-    setIsLoading(true); // Set loading state when starting submission
+    setIsLoading(true);
     
     try {
-      const response = await axios.post(`${API}/api/email/send`, {
+      const response = await emailAPI.sendEmail({
         name: formData.name,
         email: formData.email,
         message: formData.message
-      }, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
       });
 
       if (response.data.success) {
@@ -70,7 +64,7 @@ const Contact = () => {
       console.error('Error sending message:', error);
       setFormStatus('error');
     } finally {
-      setIsLoading(false); // Reset loading state when done
+      setIsLoading(false);
     }
   };
 
