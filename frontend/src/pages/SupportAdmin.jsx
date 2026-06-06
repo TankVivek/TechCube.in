@@ -12,6 +12,8 @@ export default function SupportAdmin() {
   const [selected, setSelected] = useState(null); // full ticket object
   const [input, setInput] = useState('');
   const [error, setError] = useState('');
+  const [emailInput, setEmailInput] = useState('');
+  const [emailStatus, setEmailStatus] = useState('');
   const socketRef = useRef(null);
   const chatEndRef = useRef(null);
 
@@ -24,11 +26,29 @@ export default function SupportAdmin() {
     } catch { setError('Failed to load tickets'); }
   };
 
+  const sendEmailInstructions = async () => {
+    if (!emailInput.trim() || !selected) return;
+    setEmailStatus('sending');
+    try {
+      const res = await axios.post(`${API}/api/support/ticket/${selected.id}/send-email-instructions`, { email: emailInput.trim() }, { headers: headers() });
+      if (res.data.success) {
+        setEmailStatus('Sent!');
+        setTimeout(() => setEmailStatus(''), 3000);
+      } else {
+        setEmailStatus('Failed');
+      }
+    } catch {
+      setEmailStatus('Error');
+    }
+  };
+
   const loadTicket = async (id) => {
     try {
       const res = await axios.get(`${API}/api/support/ticket/${id}`);
       if (res.data.success) {
         setSelected(res.data.ticket);
+        setEmailInput(res.data.ticket.email);
+        setEmailStatus('');
         socketRef.current?.emit('admin_join_ticket', id);
       }
     } catch { setError('Failed to load ticket'); }
@@ -130,11 +150,29 @@ export default function SupportAdmin() {
         {selected ? (
           <>
             {/* Chat Header */}
-            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex items-center justify-between">
+            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex items-center justify-between gap-4">
               <div>
                 <div className="font-semibold text-gray-900 dark:text-white">{selected.name}</div>
                 <div className="text-xs text-gray-500 dark:text-gray-400">{selected.email} · Ticket #{selected.id.slice(0,6)} · {selected.status}</div>
               </div>
+              
+              <div className="flex items-center gap-2 ml-auto">
+                <input 
+                  type="email" 
+                  value={emailInput} 
+                  onChange={e => setEmailInput(e.target.value)} 
+                  placeholder="Client Email" 
+                  className="text-xs px-2.5 py-1.5 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500 w-48"
+                />
+                <button 
+                  onClick={sendEmailInstructions} 
+                  disabled={emailStatus === 'sending'} 
+                  className="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-md font-medium transition disabled:opacity-50"
+                >
+                  {emailStatus === 'sending' ? 'Sending...' : emailStatus || 'Email Instructions'}
+                </button>
+              </div>
+
               {selected.status === 'open' && (
                 <button onClick={closeTicket} className="text-xs bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 px-3 py-1.5 rounded-lg hover:opacity-80 transition font-medium">Close Ticket</button>
               )}
