@@ -14,7 +14,6 @@ export default function SupportAdmin() {
   const [error, setError] = useState('');
   const [emailInput, setEmailInput] = useState('');
   const [emailStatus, setEmailStatus] = useState('');
-  const [showClosed, setShowClosed] = useState(false);
   const socketRef = useRef(null);
   const chatEndRef = useRef(null);
 
@@ -130,26 +129,15 @@ export default function SupportAdmin() {
     );
   }
 
-  const filteredTickets = tickets.filter(t => showClosed || t.status !== 'closed');
+  const filteredTickets = tickets.filter(t => t.status !== 'closed');
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex">
       {/* Sidebar - Ticket List */}
       <div className="w-80 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 flex flex-col">
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex flex-col gap-1.5">
-          <div className="flex items-center justify-between">
-            <h1 className="font-bold text-lg text-gray-900 dark:text-white">Support Tickets</h1>
-            <label className="flex items-center gap-1 cursor-pointer select-none">
-              <input 
-                type="checkbox" 
-                checked={showClosed} 
-                onChange={e => setShowClosed(e.target.checked)} 
-                className="w-3.5 h-3.5 rounded border-gray-300 dark:border-gray-700 text-blue-600 focus:ring-blue-500"
-              />
-              <span className="text-xs text-gray-500 dark:text-gray-400">Show Closed</span>
-            </label>
-          </div>
-          <p className="text-xs text-gray-500 dark:text-gray-400">{filteredTickets.length} active ticket(s)</p>
+        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+          <h1 className="font-bold text-lg text-gray-900 dark:text-white">Support Tickets</h1>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{filteredTickets.length} active ticket(s)</p>
         </div>
         <div className="flex-1 overflow-y-auto">
           {filteredTickets.map(t => (
