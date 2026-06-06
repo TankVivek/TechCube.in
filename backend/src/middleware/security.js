@@ -59,7 +59,11 @@ const securityHeaders = helmet({
                 "https://*.analytics.google.com",
                 "https://*.googletagmanager.com",
                 "https://*.g.doubleclick.net",
-                "https://*.google.com"
+                "https://*.google.com",
+                "https://*.googleapis.com",
+                "https://*.firebase.com",
+                "https://fcmregistrations.googleapis.com",
+                "https://firebaseinstallations.googleapis.com"
             ],
             frameSrc: ["'self'", "https://www.google.com"],
         },
