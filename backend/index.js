@@ -26,6 +26,14 @@ const support = require("./src/services/support.service");
 const app = express();
 const server = http.createServer(app);
 
+// Trust proxy for rate limiting behind reverse proxies (like Render)
+app.set('trust proxy', 1);
+
+// Health check endpoint (defined early to bypass security/rate limit middleware)
+app.get("/health", (req, res) => {
+    res.status(200).json({ status: "OK", message: "Server is running" });
+});
+
 // Socket.io setup
 const { Server } = require("socket.io");
 const io = new Server(server, {
@@ -161,11 +169,6 @@ io.on("connection", (socket) => {
     socket.on("disconnect", () => {
         if (socket.isAdmin) adminSockets.delete(socket.id);
     });
-});
-
-// Health check endpoint
-app.get("/health", (req, res) => {
-    res.status(200).json({ status: "OK", message: "Server is running" });
 });
 
 // Serve static files from the frontend build directory
