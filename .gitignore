@@ -166,3 +166,6 @@ logs/
 # Temporary files
 *.tmp
 *.temp
+backend/data/tickets/*.enc
+*-firebase-adminsdk-*.json
+*.json.enc
