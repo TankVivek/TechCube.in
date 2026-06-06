@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const path = require("path");
 const compression = require("compression");
+const http = require("http");
 require("dotenv").config();
 const fs = require('fs');
 
@@ -19,7 +20,26 @@ const {
 // Import error handling middleware
 const { errorHandler, notFound } = require("./src/middleware/errorHandler");
 
+// Import support service
+const support = require("./src/services/support.service");
+
 const app = express();
+const server = http.createServer(app);
+
+// Socket.io setup
+const { Server } = require("socket.io");
+const io = new Server(server, {
+    cors: {
+        origin: process.env.CORS_ORIGIN 
+            ? process.env.CORS_ORIGIN.split(',') 
+            : ["http://localhost:3001", "https://techcube.in"],
+        methods: ["GET", "POST"],
+        credentials: true
+    }
+});
+
+// Track active admin sockets
+const adminSockets = new Set();
 
 // Security middleware
 app.use(securityHeaders);
@@ -48,6 +68,100 @@ app.use(sanitizeInput);
 
 // API Routes with rate limiting
 app.use("/api/email", emailRateLimiter, emailRoutes);
+
+// ── Support Chat API (inline, minimal) ──────────────────────────────
+const ADMIN_PASS = process.env.SUPPORT_ADMIN_PASSWORD || 'Admin@TechCube123';
+
+// Start a support session
+app.post("/api/support/initiate", (req, res) => {
+    try {
+        const { name, email } = req.body;
+        if (!name || !email) return res.status(400).json({ success: false, message: "Name and email required" });
+        const ticket = support.createTicket(name, email);
+        const agentOnline = adminSockets.size > 0;
+        if (!agentOnline) {
+            support.addMessage(ticket.id, 'system', 'No agent is currently online. Your message has been saved as a support ticket. We will get back to you soon!');
+        }
+        res.json({ success: true, ticket: { id: ticket.id, status: ticket.status }, agentOnline });
+    } catch (e) {
+        res.status(500).json({ success: false, message: e.message });
+    }
+});
+
+// Get ticket (for user to restore session)
+app.get("/api/support/ticket/:id", (req, res) => {
+    const ticket = support.loadTicket(req.params.id);
+    if (!ticket) return res.status(404).json({ success: false, message: "Ticket not found" });
+    res.json({ success: true, ticket });
+});
+
+// Admin: list all tickets
+app.get("/api/support/tickets", (req, res) => {
+    const pass = req.headers['x-admin-password'];
+    if (pass !== ADMIN_PASS) return res.status(401).json({ success: false, message: "Unauthorized" });
+    res.json({ success: true, tickets: support.listTickets() });
+});
+
+// Admin: close/resolve ticket
+app.post("/api/support/ticket/:id/close", (req, res) => {
+    const pass = req.headers['x-admin-password'];
+    if (pass !== ADMIN_PASS) return res.status(401).json({ success: false, message: "Unauthorized" });
+    const ticket = support.updateStatus(req.params.id, 'closed');
+    if (!ticket) return res.status(404).json({ success: false, message: "Ticket not found" });
+    io.to(`ticket_${req.params.id}`).emit('ticket_closed');
+    res.json({ success: true });
+});
+
+// ── Socket.io Events ────────────────────────────────────────────────
+io.on("connection", (socket) => {
+
+    // User joins their ticket room
+    socket.on("join_ticket", (ticketId) => {
+        socket.join(`ticket_${ticketId}`);
+        socket.ticketId = ticketId;
+    });
+
+    // Admin joins
+    socket.on("admin_join", (password) => {
+        if (password !== ADMIN_PASS) return socket.emit("auth_error", "Wrong password");
+        socket.isAdmin = true;
+        adminSockets.add(socket.id);
+        socket.join("admin_room");
+        socket.emit("admin_authenticated");
+    });
+
+    // Admin joins a specific ticket chat
+    socket.on("admin_join_ticket", (ticketId) => {
+        if (!socket.isAdmin) return;
+        socket.join(`ticket_${ticketId}`);
+        support.setAgentFlag(ticketId, true);
+        io.to(`ticket_${ticketId}`).emit('agent_joined');
+    });
+
+    // User sends a message
+    socket.on("user_message", ({ ticketId, text }) => {
+        const msg = support.addMessage(ticketId, 'user', text);
+        if (msg) {
+            io.to(`ticket_${ticketId}`).emit('new_message', msg);
+            // Notify admin room about new message
+            io.to("admin_room").emit('ticket_update', { ticketId, msg });
+        }
+    });
+
+    // Admin sends a reply
+    socket.on("admin_message", ({ ticketId, text }) => {
+        if (!socket.isAdmin) return;
+        const msg = support.addMessage(ticketId, 'agent', text);
+        if (msg) {
+            io.to(`ticket_${ticketId}`).emit('new_message', msg);
+            io.to("admin_room").emit('ticket_update', { ticketId, msg });
+        }
+    });
+
+    socket.on("disconnect", () => {
+        if (socket.isAdmin) adminSockets.delete(socket.id);
+    });
+});
 
 // Health check endpoint
 app.get("/health", (req, res) => {
@@ -102,7 +216,7 @@ const PORT = process.env.PORT || 3000;
 app.use(notFound);
 app.use(errorHandler);
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
     console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
 });

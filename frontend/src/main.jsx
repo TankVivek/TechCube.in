@@ -14,6 +14,8 @@ const AISolutions = lazy(() => import("./pages/aISolutions"));
 const Contact = lazy(() => import("./pages/contact"));
 const Footer = lazy(() => import("./pages/footer"));
 import RobotsTxt from "./pages/RobotsTxt";
+import SupportWidget from "./components/SupportWidget";
+const SupportAdmin = lazy(() => import("./pages/SupportAdmin"));
 
 const LoadingSpinner = () => (
   <div className="fixed inset-0 flex items-center justify-center">
@@ -41,6 +43,7 @@ const HomePage = () => {
         </main>
         <Footer />
       </Suspense>
+      <SupportWidget />
     </PageWrapper>
   );
 };
@@ -53,6 +56,7 @@ const App = () => (
           <Route path="/" element={<HomePage />} />
           <Route path="/index.php" element={<Navigate to="/" replace />} />
           <Route path="/robots" element={<RobotsTxt />} />
+          <Route path="/support-admin" element={<Suspense fallback={<LoadingSpinner />}><SupportAdmin /></Suspense>} />
           <Route path="*" element={<HomePage />} />
         </Routes>
       </HelmetProvider>
