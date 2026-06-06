@@ -38,18 +38,36 @@ function saveTicket(ticket) {
 function loadTicket(id) {
   const p = ticketPath(id);
   if (!fs.existsSync(p)) return null;
-  return JSON.parse(decrypt(fs.readFileSync(p, 'utf8')));
+  try {
+    const rawData = fs.readFileSync(p, 'utf8');
+    const decrypted = decrypt(rawData);
+    return JSON.parse(decrypted);
+  } catch (err) {
+    console.error(`Error loading/decrypting ticket ${id}:`, err);
+    return null;
+  }
 }
 
 function listTickets() {
   ensureDir();
   const files = fs.readdirSync(DATA_DIR).filter(f => f.endsWith('.enc'));
-  return files.map(f => {
+  const list = [];
+  for (const f of files) {
     const id = f.replace('.enc', '');
     const ticket = loadTicket(id);
-    // Return summary only (no full messages) for listing
-    return { id: ticket.id, name: ticket.name, email: ticket.email, status: ticket.status, createdAt: ticket.createdAt, hasAgent: ticket.hasAgent, messageCount: ticket.messages.length };
-  });
+    if (ticket) {
+      list.push({
+        id: ticket.id,
+        name: ticket.name,
+        email: ticket.email,
+        status: ticket.status,
+        createdAt: ticket.createdAt,
+        hasAgent: ticket.hasAgent,
+        messageCount: ticket.messages ? ticket.messages.length : 0
+      });
+    }
+  }
+  return list;
 }
 
 function createTicket(name, email) {
