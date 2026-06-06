@@ -10,9 +10,23 @@ const fs = require('fs');
 // Initialize MongoDB connection
 const MONGODB_URI = process.env.MONGODB_URI;
 if (MONGODB_URI) {
-    mongoose.connect(MONGODB_URI)
-        .then(() => console.log("MongoDB: Connected successfully"))
-        .catch(err => console.error("MongoDB: Connection error:", err));
+    console.log("MongoDB: Attempting to connect...");
+    mongoose.connect(MONGODB_URI, {
+        serverSelectionTimeoutMS: 5000, // Fail fast if no connection
+    })
+    .then(() => console.log("MongoDB: Connected successfully"))
+    .catch(err => {
+        console.error("MongoDB: Connection error - check your MONGODB_URI and IP whitelist.");
+        console.error("Error details:", err.message);
+    });
+
+    mongoose.connection.on('error', err => {
+        console.error("MongoDB: Runtime error:", err.message);
+    });
+
+    mongoose.connection.on('disconnected', () => {
+        console.warn("MongoDB: Disconnected. Mongoose will try to reconnect.");
+    });
 } else {
     console.warn("MongoDB: MONGODB_URI is missing in .env file. Database features will be disabled.");
 }

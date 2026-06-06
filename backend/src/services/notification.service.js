@@ -24,6 +24,12 @@ try {
 // Add/register a token
 async function registerToken(token) {
     console.log(`FCM: Received request to register token: ${token.substring(0, 10)}...`);
+    
+    if (mongoose.connection.readyState !== 1) {
+        console.warn("FCM: Skipping token registration - MongoDB is not connected (Current state: " + mongoose.connection.readyState + ")");
+        return;
+    }
+
     try {
         // Use upsert to update the timestamp if the token already exists
         // This resets the TTL expiration timer
@@ -42,6 +48,11 @@ async function registerToken(token) {
 const sendFirebaseAlert = async (title, body) => {
     if (!firebaseInitialized) {
         console.log("FCM: Skipping alert - Firebase Admin SDK not initialized (missing service account).");
+        return;
+    }
+
+    if (mongoose.connection.readyState !== 1) {
+        console.warn("FCM: Skipping alert - MongoDB is not connected (Current state: " + mongoose.connection.readyState + ")");
         return;
     }
 
