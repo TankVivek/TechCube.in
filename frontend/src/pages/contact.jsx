@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 import axios from 'axios';
+import { ArrowRightIcon } from '@heroicons/react/24/outline';
 
 const Contact = () => {
   const [formData, setFormData] = useState({
