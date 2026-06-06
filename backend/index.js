@@ -138,35 +138,12 @@ app.post("/api/support/ticket/:id/send-email-instructions", async (req, res) => 
         if (!ticket) return res.status(404).json({ success: false, message: "Ticket not found" });
 
         const emailService = require("./src/services/email.service");
-        
-        const emailBody = `
-            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
-                <h2 style="color: #1e3a8a; margin-top: 0;">Support Ticket Guidelines — TechCube</h2>
-                <p>Hello ${ticket.name},</p>
-                <p>An administrator has generated support instructions for your ticket. You can track your ticket and chat with our team using the links below:</p>
-                
-                <div style="background-color: #f8fafc; border-left: 4px solid #2563eb; padding: 15px; margin: 20px 0; border-radius: 4px;">
-                    <h4 style="margin: 0 0 5px 0; color: #2563eb;">🎫 Your Ticket Details</h4>
-                    <p style="margin: 0; font-size: 14px;"><strong>Ticket ID:</strong> ${ticket.id}</p>
-                    <p style="margin: 5px 0 0 0; font-size: 14px;"><strong>Status:</strong> ${ticket.status.toUpperCase()}</p>
-                </div>
-
-                <h4 style="color: #1e3a8a;">⚡ How to Access Support</h4>
-                <ol style="padding-left: 20px; line-height: 1.6;">
-                    <li><strong>Real-time Chat:</strong> Visit <a href="https://techcube.in" style="color: #2563eb; text-decoration: none;">TechCube.in</a> and click the chat icon at the bottom-right corner. It will automatically load your ongoing session.</li>
-                    <li><strong>Ticket Status page:</strong> View your conversation log and status directly at: <br />
-                    <a href="https://techcube.in/support-ticket#${ticket.id}" style="color: #2563eb; word-break: break-all;">https://techcube.in/support-ticket#${ticket.id}</a></li>
-                </ol>
-
-                <p style="color: #64748b; font-size: 12px; margin-top: 30px; border-top: 1px solid #e2e8f0; padding-top: 15px;">
-                    This is an automated support notification from TechCube. If you did not request this, please ignore this email.
-                </p>
-            </div>
-        `;
+        const ticketTemplate = require("./src/helpers/ticketEmail.template");
+        const emailBody = ticketTemplate(ticket);
 
         await emailService.sendEmail({
             to: email,
-            subject: `Support Ticket #${ticket.id.slice(0, 6)} Guidelines - TechCube`,
+            subject: `Support Ticket #${ticket.id.slice(0, 6)} - TechCube`,
             content: emailBody
         });
 
