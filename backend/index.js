@@ -3,8 +3,19 @@ const cors = require("cors");
 const path = require("path");
 const compression = require("compression");
 const http = require("http");
+const mongoose = require("mongoose");
 require("dotenv").config();
 const fs = require('fs');
+
+// Initialize MongoDB connection
+const MONGODB_URI = process.env.MONGODB_URI;
+if (MONGODB_URI) {
+    mongoose.connect(MONGODB_URI)
+        .then(() => console.log("MongoDB: Connected successfully"))
+        .catch(err => console.error("MongoDB: Connection error:", err));
+} else {
+    console.warn("MongoDB: MONGODB_URI is missing in .env file. Database features will be disabled.");
+}
 
 // Import routes
 const emailRoutes = require("./src/routes/email.routes");
@@ -94,7 +105,6 @@ app.post("/api/support/initiate", (req, res) => {
         const ticket = support.createTicket(name, email);
         
         // Fire Firebase Push Notification alert
-        const { sendFirebaseAlert } = require("./src/services/notification.service");
         sendFirebaseAlert(`New Support Ticket #${ticket.id.slice(0, 6)}`, `Name: ${name}\nEmail: ${email}`);
 
         const agentOnline = adminSockets.size > 0;
@@ -113,7 +123,6 @@ app.post("/api/support/admin/fcm-token", (req, res) => {
         const { token } = req.body;
         console.log(`API: Received FCM token registration request. Token length: ${token ? token.length : 0}`);
         if (!token) return res.status(400).json({ success: false, message: "Token required" });
-        const { registerToken } = require("./src/services/notification.service");
         registerToken(token);
         res.json({ success: true, message: "Token registered successfully" });
     } catch (e) {
