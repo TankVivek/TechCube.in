@@ -32,7 +32,7 @@ const io = new Server(server, {
     cors: {
         origin: process.env.CORS_ORIGIN 
             ? process.env.CORS_ORIGIN.split(',') 
-            : ["http://localhost:3001", "https://techcube.in"],
+            : ["http://localhost:3001", "https://techcube.in", "https://www.techcube.in"],
         methods: ["GET", "POST"],
         credentials: true
     }
@@ -49,7 +49,7 @@ app.use(compression());
 const corsOptions = {
     origin: process.env.CORS_ORIGIN 
         ? process.env.CORS_ORIGIN.split(',') 
-        : ["http://localhost:3001", "https://techcube.in"],
+        : ["http://localhost:3001", "https://techcube.in", "https://www.techcube.in"],
     methods: ["GET", "POST"],
     credentials: true,
     optionsSuccessStatus: 200

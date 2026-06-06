@@ -100,20 +100,6 @@
   .gradient-text-corporate {
     @apply text-slate-900 dark:text-white;
   }
-}
-
-  /* Corporate Animations */
-  .animate-fade-in {
-    animation: fadeIn 0.6s ease-out;
-  }
-
-  .animate-slide-up {
-    animation: slideUp 0.6s ease-out;
-  }
-
-  .animate-scale-in {
-    animation: scaleIn 0.4s ease-out;
-  }
 
   /* Corporate Loading States */
   .loading-skeleton {
@@ -130,21 +116,7 @@
   }
 
   .disabled-card {
-    @apply opacity-60 cursor-not-allowed hover:transform-none hover:shadow-sm;
-  }
-
-  /* Corporate Tooltips */
-  .tooltip {
-    @apply absolute z-50 px-3 py-2 text-sm text-white bg-gray-900 rounded-lg shadow-lg opacity-0 pointer-events-none transition-opacity duration-200;
-  }
-
-  .tooltip::before {
-    content: '';
-    @apply absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900;
-  }
-
-  .tooltip-trigger:hover .tooltip {
-    @apply opacity-100;
+    @apply opacity-60 cursor-not-allowed;
   }
 
   /* Corporate Responsive Utilities */
@@ -163,6 +135,7 @@
   .responsive-margin {
     @apply mx-4 sm:mx-6 lg:mx-8;
   }
+}
 
 
 /* Corporate Animations */

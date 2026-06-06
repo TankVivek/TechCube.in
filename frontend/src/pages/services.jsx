@@ -195,7 +195,7 @@ const colorClasses = {
 };
 
 const Services = () => {
-  const [ref, inView] = useInView({
+  const { ref, inView } = useInView({
     triggerOnce: true,
     threshold: 0.1,
   });
