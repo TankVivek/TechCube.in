@@ -12,7 +12,7 @@ const sendEmail = async ({ to, subject, content }) => {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    from: process.env.SMTP_FROM || 'onboarding@resend.dev',
+                    from: process.env.RESEND_FROM || 'onboarding@resend.dev',
                     to: to,
                     subject: subject,
                     html: content
