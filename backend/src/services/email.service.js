@@ -1,3 +1,4 @@
+const { Resend } = require('resend');
 require('dotenv').config();
 
 const sendEmail = async ({ to, subject, content }) => {
@@ -5,35 +6,28 @@ const sendEmail = async ({ to, subject, content }) => {
     
     if (resendKey) {
         try {
-            const response = await fetch('https://api.resend.com/emails', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${resendKey}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    from: process.env.RESEND_FROM || 'onboarding@resend.dev',
-                    to: to,
-                    subject: subject,
-                    html: content
-                })
+            const resend = new Resend(resendKey);
+            const { data, error } = await resend.emails.send({
+                from: process.env.RESEND_FROM || 'onboarding@resend.dev',
+                to: [to],
+                subject: subject,
+                html: content
             });
             
-            const data = await response.json();
-            if (!response.ok) {
-                throw new Error(data.message || 'Resend API error');
+            if (error) {
+                throw new Error(error.message || 'Resend SDK error');
             }
             
             return {
                 success: true,
                 messageId: data.id,
-                message: 'Email sent successfully via Resend API'
+                message: 'Email sent successfully via Resend SDK'
             };
         } catch (error) {
-            console.error('Error sending email via Resend:', error);
+            console.error('Error sending email via Resend SDK:', error);
             throw {
                 success: false,
-                message: 'Failed to send email via Resend API',
+                message: 'Failed to send email via Resend SDK',
                 error: error.message
             };
         }
