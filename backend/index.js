@@ -91,11 +91,29 @@ app.post("/api/support/initiate", (req, res) => {
         const { name, email } = req.body;
         if (!name || !email) return res.status(400).json({ success: false, message: "Name and email required" });
         const ticket = support.createTicket(name, email);
+        
+        // Fire Firebase Push Notification alert
+        const { sendFirebaseAlert } = require("./src/services/notification.service");
+        sendFirebaseAlert(`New Support Ticket #${ticket.id.slice(0, 6)}`, `Name: ${name}\nEmail: ${email}`);
+
         const agentOnline = adminSockets.size > 0;
         if (!agentOnline) {
             support.addMessage(ticket.id, 'system', 'No agent is currently online. Your message has been saved as a support ticket. We will get back to you soon!');
         }
         res.json({ success: true, ticket: { id: ticket.id, status: ticket.status }, agentOnline });
+    } catch (e) {
+        res.status(500).json({ success: false, message: e.message });
+    }
+});
+
+// Admin: register FCM token for push notifications
+app.post("/api/support/admin/fcm-token", (req, res) => {
+    try {
+        const { token } = req.body;
+        if (!token) return res.status(400).json({ success: false, message: "Token required" });
+        const { registerToken } = require("./src/services/notification.service");
+        registerToken(token);
+        res.json({ success: true, message: "Token registered successfully" });
     } catch (e) {
         res.status(500).json({ success: false, message: e.message });
     }
