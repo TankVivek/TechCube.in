@@ -159,6 +159,20 @@ app.get("/api/support/tickets", (req, res) => {
     res.json({ success: true, tickets: support.listTickets() });
 });
 
+// Admin: list all domains (stub)
+app.get("/api/admin/domains", (req, res) => {
+    const pass = req.headers['x-admin-password'];
+    if (pass !== ADMIN_PASS) return res.status(401).json({ success: false, message: "Unauthorized" });
+    res.json({ success: true, domains: { data: [] } });
+});
+
+// Admin: get domain details (stub)
+app.get("/api/admin/domains/:id", (req, res) => {
+    const pass = req.headers['x-admin-password'];
+    if (pass !== ADMIN_PASS) return res.status(401).json({ success: false, message: "Unauthorized" });
+    res.json({ success: true, domain: null });
+});
+
 // Admin: close/resolve ticket
 app.post("/api/support/ticket/:id/close", (req, res) => {
     const pass = req.headers['x-admin-password'];
