@@ -19,6 +19,7 @@ export default defineConfig({
     allowedHosts: [
       "techcube-in.onrender.com",
       "techcube.in",
+      "www.techcube.in",
       "2c959505-5728-4a1e-9783-68ba141a402d-00-2ipu5wutlo1pt.sisko.replit.dev",
       "*",
     ],
