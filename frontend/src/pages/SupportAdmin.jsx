@@ -1,9 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { io } from 'socket.io-client';
 import axios from 'axios';
+import { initializeApp } from 'firebase/app';
+import { getMessaging, getToken } from 'firebase/messaging';
 
 const API = import.meta.env.VITE_API_URL || '';
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || (window.location.origin);
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAJhsnL_Vwwu4Qj8fZvO9RW9SD8O1tWbUk",
+  authDomain: "techcube-99abf.firebaseapp.com",
+  projectId: "techcube-99abf",
+  storageBucket: "techcube-99abf.firebasestorage.app",
+  messagingSenderId: "814216803952",
+  appId: "1:814216803952:web:b6cd67c0d7283e67f0e6b5"
+};
 
 export default function SupportAdmin() {
   const [password, setPassword] = useState('');
@@ -24,6 +35,31 @@ export default function SupportAdmin() {
       const res = await axios.get(`${API}/api/support/tickets`, { headers: headers() });
       if (res.data.success) setTickets(res.data.tickets);
     } catch { setError('Failed to load tickets'); }
+  };
+
+  const setupNotifications = async () => {
+    try {
+      if ('serviceWorker' in navigator) {
+        const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+        const app = initializeApp(firebaseConfig);
+        const messaging = getMessaging(app);
+
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+          const token = await getToken(messaging, {
+            serviceWorkerRegistration: registration,
+            vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY || undefined
+          });
+
+          if (token) {
+            console.log('FCM Token registered:', token);
+            await axios.post(`${API}/api/support/admin/fcm-token`, { token }, { headers: headers() });
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Failed to setup push notifications:', err);
+    }
   };
 
   const sendEmailInstructions = async () => {
@@ -76,6 +112,7 @@ export default function SupportAdmin() {
       setAuthed(true);
       setError('');
       loadTickets();
+      setupNotifications();
     });
     socket.on('auth_error', (msg) => setError(msg));
 
