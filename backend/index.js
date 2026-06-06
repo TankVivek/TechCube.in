@@ -31,7 +31,12 @@ app.set('trust proxy', 1);
 
 // Health check endpoint (defined early to bypass security/rate limit middleware)
 app.get("/health", (req, res) => {
-    res.status(200).json({ status: "OK", message: "Server is running" });
+    res.status(200).json({ 
+        status: "OK", 
+        message: "Server is running",
+        timestamp: new Date().toISOString(),
+        env: process.env.NODE_ENV || 'development'
+    });
 });
 
 // Socket.io setup
@@ -63,16 +68,6 @@ const corsOptions = {
     optionsSuccessStatus: 200
 };
 app.use(cors(corsOptions));
-
-// Health check endpoint (Top-level for reliability)
-app.get("/health", (req, res) => {
-    res.status(200).json({ 
-        status: "OK", 
-        message: "Server is running",
-        timestamp: new Date().toISOString(),
-        env: process.env.NODE_ENV || 'development'
-    });
-});
 
 // Rate limiting
 app.use(createRateLimiter());

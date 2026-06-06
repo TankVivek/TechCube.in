@@ -6,101 +6,208 @@
 /* Import Inter font for better typography */
 
 @layer base {
-  html, body {
-    padding: 0px !important;
-    margin: 0px !important;
-    width: 100% !important;
-    min-height: 100vh !important;
-  }
 
-  /* Minimalist Typography System */
+html, body {
+  padding: 0px !important;
+  margin: 0px !important;
+  width: 100% !important;
+  min-height: 100vh !important;
+}
+
+  /* Corporate Typography System */
   h1 {
-    @apply text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-slate-900 dark:text-white;
+    @apply text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-gray-900 dark:text-white;
+    font-weight: 800;
     line-height: 1.1;
   }
 
   h2 {
-    @apply text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-slate-900 dark:text-white;
+    @apply text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-gray-900 dark:text-white;
+    font-weight: 700;
     line-height: 1.2;
   }
 
   h3 {
-    @apply text-2xl sm:text-3xl font-bold text-slate-800 dark:text-slate-100;
+    @apply text-2xl sm:text-3xl font-semibold text-gray-800 dark:text-gray-100;
+    font-weight: 600;
     line-height: 1.3;
   }
 
   h4 {
-    @apply text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-100;
+    @apply text-xl sm:text-2xl font-semibold text-gray-800 dark:text-gray-100;
+    font-weight: 600;
   }
 
   p {
-    @apply text-base sm:text-lg text-slate-600 dark:text-slate-400 leading-relaxed;
+    @apply text-base sm:text-lg text-gray-600 dark:text-gray-300 leading-relaxed;
+    line-height: 1.6;
   }
 
   /* Focus styles for accessibility */
   *:focus-visible {
-    @apply outline-none ring-2 ring-blue-600 ring-offset-2 ring-offset-white dark:ring-offset-slate-950;
+    @apply outline-none ring-2 ring-blue-600 ring-offset-2 ring-offset-white dark:ring-offset-gray-900;
   }
 
   /* Custom scrollbar */
   ::-webkit-scrollbar {
-    width: 6px;
+    width: 8px;
   }
 
   ::-webkit-scrollbar-track {
-    @apply bg-transparent;
+    @apply bg-gray-100 dark:bg-gray-800;
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply bg-slate-300 dark:bg-slate-700 rounded-full;
+    @apply bg-gray-300 dark:bg-gray-600 rounded-full;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-slate-400 dark:bg-slate-600;
+    @apply bg-gray-400 dark:bg-gray-500;
   }
 }
 
 @layer components {
-  /* Minimalist Button System */
+  /* Corporate Color Variables */
+  :root {
+    --primary-50: #eff6ff;
+    --primary-100: #dbeafe;
+    --primary-200: #bfdbfe;
+    --primary-300: #93c5fd;
+    --primary-400: #60a5fa;
+    --primary-500: #3b82f6;
+    --primary-600: #2563eb;
+    --primary-700: #1d4ed8;
+    --primary-800: #1e40af;
+    --primary-900: #1e3a8a;
+    
+    --gray-50: #f9fafb;
+    --gray-100: #f3f4f6;
+    --gray-200: #e5e7eb;
+    --gray-300: #d1d5db;
+    --gray-400: #9ca3af;
+    --gray-500: #111827;
+    --gray-600: #111827;
+    --gray-700: #111827;
+    --gray-800: #111827;
+    --gray-900: #111827;
+    
+    --success-500: #10b981;
+    --warning-500: #f59e0b;
+    --error-500: #ef4444;
+  }
+
+  /* Corporate Button System */
   .btn {
-    @apply inline-flex items-center justify-center px-6 py-3 text-base font-semibold rounded-md transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
-    min-height: 44px;
+    @apply inline-flex items-center justify-center px-6 py-3 text-base font-semibold rounded-lg transition-all duration-300 ease-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none;
+    min-height: 48px;
   }
 
   .btn-primary {
-    @apply bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100 focus:ring-slate-500;
+    @apply bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg hover:from-blue-700 hover:to-blue-800 focus:ring-blue-500 hover:shadow-xl;
   }
 
   .btn-secondary {
-    @apply bg-white dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 focus:ring-slate-500;
+    @apply bg-white text-gray-900 border-2 border-gray-200 shadow-md hover:bg-gray-50 hover:border-gray-300 focus:ring-gray-500 hover:shadow-lg;
   }
 
   .btn-outline {
-    @apply bg-transparent text-blue-600 border border-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 focus:ring-blue-500;
+    @apply bg-transparent text-blue-600 border-2 border-blue-600 hover:bg-blue-600 hover:text-white focus:ring-blue-500;
   }
 
-  /* Minimalist Card System */
+  .btn-ghost {
+    @apply bg-transparent text-gray-700 hover:bg-gray-100 focus:ring-gray-500;
+  }
+
+  /* Corporate Card System */
   .card {
-    @apply bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 transition-all duration-200;
+    @apply bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
   }
 
   .card-hover {
-    @apply hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-sm;
+    @apply hover:shadow-xl hover:-translate-y-2 hover:border-blue-200 dark:hover:border-blue-600;
   }
 
-  /* Minimalist Layout Utilities */
+  .card-interactive {
+    @apply cursor-pointer hover:shadow-xl hover:-translate-y-2 hover:border-blue-200 dark:hover:border-blue-600;
+  }
+
+  /* Corporate Navigation */
+  .nav-link {
+    @apply relative px-4 py-2 text-gray-700 dark:text-gray-300 font-medium transition-all duration-200 hover:text-blue-600 dark:hover:text-blue-400;
+  }
+
+  .nav-link-active {
+    @apply text-blue-600 dark:text-blue-400;
+  }
+
+  .nav-link-active::after {
+    content: '';
+    @apply absolute bottom-0 left-0 w-full h-0.5 bg-blue-600 dark:bg-blue-400;
+  }
+
+  /* Corporate Form Elements */
+  .form-input {
+    @apply w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200;
+  }
+
+  .form-label {
+    @apply block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2;
+  }
+
+  .form-error {
+    @apply text-sm text-red-600 dark:text-red-400 mt-1;
+  }
+
+  /* Corporate Layout Utilities */
   .container-corporate {
     @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
   }
 
   .section-corporate {
-    @apply py-20 sm:py-28 lg:py-36;
+    @apply py-16 sm:py-24 lg:py-32;
+  }
+
+  .section-corporate-sm {
+    @apply py-12 sm:py-16 lg:py-20;
+  }
+
+  .grid-corporate {
+    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-12;
+  }
+
+  .grid-corporate-2 {
+    @apply grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16;
+  }
+
+  /* Corporate Backgrounds */
+  .bg-corporate-gradient {
+    @apply bg-gradient-to-br from-gray-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900/20;
+  }
+
+  .bg-corporate-dark {
+    @apply bg-gray-900 dark:bg-black;
+  }
+
+  .bg-corporate-light {
+    @apply bg-white dark:bg-gray-800;
+  }
+
+  /* Corporate Text Utilities */
+  .text-corporate-primary {
+    @apply text-blue-600 dark:text-blue-400;
+  }
+
+  .text-corporate-secondary {
+    @apply text-gray-600 dark:text-gray-300;
+  }
+
+  .text-corporate-muted {
+    @apply text-gray-500 dark:text-gray-400;
   }
 
   .gradient-text-corporate {
-    @apply text-slate-900 dark:text-white;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-600;
   }
-}
 
   /* Corporate Animations */
   .animate-fade-in {
@@ -163,7 +270,7 @@
   .responsive-margin {
     @apply mx-4 sm:mx-6 lg:mx-8;
   }
-
+}
 
 /* Corporate Animations */
 @keyframes fadeIn {
