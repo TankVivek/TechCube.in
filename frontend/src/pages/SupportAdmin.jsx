@@ -13,7 +13,8 @@ const firebaseConfig = {
   projectId: "techcube-99abf",
   storageBucket: "techcube-99abf.firebasestorage.app",
   messagingSenderId: "814216803952",
-  appId: "1:814216803952:web:b6cd67c0d7283e67f0e6b5"
+  appId: "1:814216803952:web:b6cd67c0d7283e67f0e6b5",
+  measurementId: "G-PYE4J9VXSD"
 };
 
 export default function SupportAdmin() {
@@ -71,60 +72,67 @@ export default function SupportAdmin() {
   };
 
   const setupNotifications = async (pass) => {
-    console.log('FCM: Starting push notification setup...');
+    console.log('FCM: [1/7] Starting push notification setup sequence...');
     try {
       if (!('serviceWorker' in navigator)) {
-        console.warn('FCM: Push notifications not supported - No Service Worker capability in this browser.');
+        console.error('FCM: [ERROR] Push notifications not supported - No Service Worker capability in this browser.');
         return;
       }
       
-      console.log('FCM: Registering Service Worker...');
+      console.log('FCM: [2/7] Registering Service Worker from /firebase-messaging-sw.js...');
       const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-      console.log('FCM: Service Worker registered successfully.');
+      console.log('FCM: [3/7] Service Worker registered successfully:', registration.scope);
 
+      console.log('FCM: [4/7] Initializing Firebase App...');
       const app = initializeApp(firebaseConfig);
       const messaging = getMessaging(app);
+      console.log('FCM: Firebase messaging initialized.');
 
-      console.log('FCM: Requesting notification permissions...');
+      console.log('FCM: [5/7] Requesting notification permissions...');
       const permission = await Notification.requestPermission();
+      console.log('FCM: Permission status:', permission);
+      
       if (permission === 'granted') {
-        console.log('FCM: Notification permission granted.');
         const vapidKey = import.meta.env.VITE_FIREBASE_VAPID_KEY;
+        console.log('FCM: [6/7] VAPID Key found:', vapidKey ? 'YES' : 'NO (Missing in .env)');
+        
         if (!vapidKey) {
-          console.error('FCM: ERROR - VITE_FIREBASE_VAPID_KEY is missing in your .env file. Setup will fail.');
+          console.error('FCM: [CRITICAL ERROR] VITE_FIREBASE_VAPID_KEY is missing in your .env file. Push notifications WILL NOT WORK without it.');
         }
 
-        console.log('FCM: Generating device token...');
+        console.log('FCM: [7/7] Requesting FCM device token...');
         const token = await getToken(messaging, {
           serviceWorkerRegistration: registration,
           vapidKey: vapidKey || undefined
         });
 
         if (token) {
-          console.log('FCM: Token generated:', token);
+          console.log('FCM: SUCCESS! Device token generated:', token);
+          console.log('FCM: Registering token with backend...');
           const res = await axios.post(`${API}/api/support/admin/fcm-token`, { token }, { headers: headers(pass) });
           if (res.data.success) {
-            console.log('FCM: Token registered on backend successfully.');
+            console.log('FCM: Token registered on backend successfully. System ready.');
+          } else {
+            console.error('FCM: Backend rejected token registration:', res.data);
           }
         } else {
-          console.warn('FCM: No token received from Firebase. Check your VAPID key and Firebase project settings.');
+          console.warn('FCM: [WARNING] No token received from Firebase. Ensure VAPID key is correct and Firebase project is configured for web push.');
         }
 
         // Handle foreground messages
         onMessage(messaging, (payload) => {
-          console.log('FCM: Foreground message received!', payload);
-          // Show a browser notification manually
-          new Notification(payload.notification.title, {
-            body: payload.notification.body,
+          console.log('FCM: [FOREGROUND EVENT] Message received!', payload);
+          new Notification(payload.notification?.title || 'New Support Message', {
+            body: payload.notification?.body || 'Check the admin panel.',
             icon: '/logo-square.png'
           });
         });
 
       } else {
-        console.warn('FCM: Notification permission denied by user.');
+        console.warn('FCM: [BLOCKER] Notification permission denied by user. User must enable notifications in browser settings.');
       }
     } catch (err) {
-      console.error('FCM: Setup failed with error:', err);
+      console.error('FCM: [FATAL ERROR] Setup failed at some step:', err);
     }
   };
 
@@ -171,10 +179,11 @@ export default function SupportAdmin() {
     socket.on('ticket_update', ({ ticketId, msg }) => {
       setSelected(prev => {
         if (prev && prev.id === ticketId) {
+          const messages = prev.messages || [];
           // Prevent displaying duplicate messages in UI
-          const exists = prev.messages.some(m => m.time === msg.time && m.text === msg.text && m.sender === msg.sender);
+          const exists = messages.some(m => m.time === msg.time && m.text === msg.text && m.sender === msg.sender);
           if (exists) return prev;
-          return { ...prev, messages: [...prev.messages, msg] };
+          return { ...prev, messages: [...messages, msg] };
         }
         return prev;
       });
@@ -348,7 +357,7 @@ export default function SupportAdmin() {
               <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex items-center justify-between gap-4">
                 <div>
                   <div className="font-semibold text-gray-900 dark:text-white">{selected.name}</div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">{selected.email} · Ticket #{selected.id.slice(0,6)} · {selected.status}</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">{selected.email} · Ticket #{selected.id?.slice(0,6)} · {selected.status}</div>
                 </div>
                 
                 <div className="flex items-center gap-2 ml-auto">
@@ -375,7 +384,7 @@ export default function SupportAdmin() {
 
               {/* Messages */}
               <div className="flex-1 overflow-y-auto p-6 space-y-3 bg-gray-50 dark:bg-gray-950">
-                {selected.messages.map((m, i) => (
+                {selected.messages?.map((m, i) => (
                   <div key={i} className={`max-w-[70%] px-4 py-2.5 rounded-xl text-sm whitespace-pre-wrap break-words ${
                     m.sender === 'agent' ? 'bg-blue-600 text-white ml-auto' :
                     m.sender === 'user' ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700' :
