@@ -11,10 +11,6 @@ const Header = lazy(() => import("./pages/header"));
 const Hero = lazy(() => import("./pages/hero"));
 const Services = lazy(() => import("./pages/services"));
 const AISolutions = lazy(() => import("./pages/aISolutions"));
-const Expertise = lazy(() => import("./pages/expertise"));
-const About = lazy(() => import("./pages/About"));
-const Industries = lazy(() => import("./pages/industries"));
-const Testimonials = lazy(() => import("./pages/Testimonials"));
 const Contact = lazy(() => import("./pages/contact"));
 const Footer = lazy(() => import("./pages/footer"));
 import RobotsTxt from "./pages/RobotsTxt";
@@ -43,11 +39,7 @@ const HomePage = () => {
         <main>
           <Hero />
           <Services />
-          <Expertise />
           <AISolutions />
-          <About />
-          <Industries />
-          <Testimonials />
           <Contact />
         </main>
         <Footer />
