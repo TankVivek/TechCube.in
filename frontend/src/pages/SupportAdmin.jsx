@@ -41,26 +41,38 @@ export default function SupportAdmin() {
 
   const setupNotifications = async (pass) => {
     try {
-      if ('serviceWorker' in navigator) {
-        const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-        const app = initializeApp(firebaseConfig);
-        const messaging = getMessaging(app);
+      if (!('serviceWorker' in navigator)) {
+        console.warn('Push notifications not supported: No Service Worker');
+        return;
+      }
+      
+      const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+      const app = initializeApp(firebaseConfig);
+      const messaging = getMessaging(app);
 
-        const permission = await Notification.requestPermission();
-        if (permission === 'granted') {
-          const token = await getToken(messaging, {
-            serviceWorkerRegistration: registration,
-            vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY || undefined
-          });
-
-          if (token) {
-            console.log('FCM Token registered:', token);
-            await axios.post(`${API}/api/support/admin/fcm-token`, { token }, { headers: headers(pass) });
-          }
+      const permission = await Notification.requestPermission();
+      if (permission === 'granted') {
+        const vapidKey = import.meta.env.VITE_FIREBASE_VAPID_KEY;
+        if (!vapidKey) {
+          console.error('VITE_FIREBASE_VAPID_KEY is missing in .env');
         }
+
+        const token = await getToken(messaging, {
+          serviceWorkerRegistration: registration,
+          vapidKey: vapidKey || undefined
+        });
+
+        if (token) {
+          console.log('FCM Token generated successfully');
+          await axios.post(`${API}/api/support/admin/fcm-token`, { token }, { headers: headers(pass) });
+        } else {
+          console.warn('No FCM token received');
+        }
+      } else {
+        console.warn('Notification permission denied');
       }
     } catch (err) {
-      console.error('Failed to setup push notifications:', err);
+      console.error('Push notification setup failed:', err);
     }
   };
 

@@ -22,6 +22,7 @@ const { errorHandler, notFound } = require("./src/middleware/errorHandler");
 
 // Import support service
 const support = require("./src/services/support.service");
+const { sendFirebaseAlert, registerToken } = require("./src/services/notification.service");
 
 const app = express();
 const server = http.createServer(app);
@@ -204,6 +205,12 @@ io.on("connection", (socket) => {
             io.to(`ticket_${ticketId}`).emit('new_message', msg);
             // Notify admin room about new message
             io.to("admin_room").emit('ticket_update', { ticketId, msg });
+            
+            // Fire Firebase Push Notification alert for new message
+            const ticket = support.loadTicket(ticketId);
+            if (ticket) {
+                sendFirebaseAlert(`New Message from ${ticket.name}`, text);
+            }
         }
     });
 
