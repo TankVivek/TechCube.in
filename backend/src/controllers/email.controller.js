@@ -21,11 +21,19 @@ const handleSendEmail = async (req, res) => {
             content: autoReplyEmail.html
         };
         
-        // Send both emails
-        await Promise.all([
-            sendEmail(adminEmailData),
-            sendEmail(autoReplyData)
-        ]);
+        // Send admin notification
+        try {
+            await sendEmail(adminEmailData);
+        } catch (err) {
+            console.error('Failed to send admin email notification:', err);
+        }
+
+        // Send auto-reply to customer
+        try {
+            await sendEmail(autoReplyData);
+        } catch (err) {
+            console.error('Failed to send auto-reply to customer:', err);
+        }
         
         res.status(200).json({
             success: true,
