@@ -16,16 +16,17 @@ const Footer = lazy(() => import("./pages/footer"));
 import RobotsTxt from "./pages/RobotsTxt";
 import SupportWidget from "./components/SupportWidget";
 const SupportAdmin = lazy(() => import("./pages/SupportAdmin"));
+const SupportTicket = lazy(() => import("./pages/SupportTicket"));
 
 const LoadingSpinner = () => (
-  <div className="fixed inset-0 flex items-center justify-center">
-    <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-blue-500"></div>
+  <div className="fixed inset-0 flex items-center justify-center bg-white dark:bg-slate-950 z-[100]">
+    <div className="w-12 h-12 border-4 border-slate-200 dark:border-slate-800 border-t-blue-600 rounded-full animate-spin"></div>
   </div>
 );
 
 const PageWrapper = ({ children }) => (
-  <div className="min-h-screen bg-white dark:bg-gray-900">
-    <div className="container mx-auto px-4">{children}</div>
+  <div className="min-h-screen bg-white dark:bg-slate-950 transition-colors duration-300">
+    {children}
   </div>
 );
 
@@ -57,6 +58,7 @@ const App = () => (
           <Route path="/index.php" element={<Navigate to="/" replace />} />
           <Route path="/robots" element={<RobotsTxt />} />
           <Route path="/support-admin" element={<Suspense fallback={<LoadingSpinner />}><SupportAdmin /></Suspense>} />
+          <Route path="/support-ticket" element={<Suspense fallback={<LoadingSpinner />}><SupportTicket /></Suspense>} />
           <Route path="*" element={<HomePage />} />
         </Routes>
       </HelmetProvider>

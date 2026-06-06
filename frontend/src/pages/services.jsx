@@ -195,17 +195,10 @@ const colorClasses = {
 };
 
 const Services = () => {
-  const [selectedService, setSelectedService] = useState(null);
   const [ref, inView] = useInView({
     triggerOnce: true,
     threshold: 0.1,
   });
-
-  const handleServiceClick = (service) => {
-    if (service.status === 'available') {
-      setSelectedService(selectedService?.id === service.id ? null : service);
-    }
-  };
 
   const scrollToContact = () => {
     const element = document.querySelector('#contact');
@@ -215,120 +208,68 @@ const Services = () => {
   };
 
   return (
-    <section id="services" className="">
+    <section id="services" className="section-corporate bg-white dark:bg-slate-950">
       <div className="container-corporate">
         {/* Header Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6 }}
-          className="text-center mb-16"
+          className="max-w-3xl mb-16"
         >
-          <h1 className="gradient-text-corporate mb-6 text-4xl md:text-5xl font-bold">Our Services</h1>
-          <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed">
-            We offer a comprehensive range of software development services to help your business thrive in the digital age.
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-slate-900 dark:text-white mb-6 tracking-tight">
+            Comprehensive Digital Services
+          </h2>
+          <p className="text-lg text-slate-600 dark:text-slate-400 leading-relaxed">
+            We provide end-to-end technology solutions designed to scale your business and drive digital excellence.
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mx-auto sm:px-8 lg:px-8 max-w-8xl" ref={ref}>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" ref={ref}>
           {services.map((service, index) => {
-            const colors = colorClasses[service.color];
             const isDisabled = service.status === 'coming-soon';
             return (
               <motion.div
                 key={service.id}
-                initial={{ opacity: 0, y: 30 }}
+                initial={{ opacity: 0, y: 20 }}
                 animate={inView ? { opacity: 1, y: 0 } : {}}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                whileHover={{ 
-                  y: -8,
-                  transition: { duration: 0.3 }
-                }}
-                className={`relative bg-white dark:bg-gray-900 rounded-2xl shadow-lg hover:shadow-2xl p-8 transition-all duration-500 border border-gray-100 dark:border-gray-700 hover:border-blue-200 dark:hover:border-blue-400 group flex flex-col h-full focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 dark:focus-within:ring-offset-gray-800 ${isDisabled ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'} overflow-hidden`}
-                tabIndex={0}
-                aria-label={service.title}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                className={`group p-8 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 transition-all duration-300 ${isDisabled ? 'opacity-50' : 'hover:border-blue-500 dark:hover:border-blue-400 hover:shadow-sm'}`}
               >
-                {/* Background gradient overlay */}
-                <div className={`absolute inset-0 bg-gradient-to-br ${colors.bg} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
-                {console.log(colors.bg ,'121121')
-                }
-                {/* Icon container with enhanced styling */}
-                <div className="relative w-20 h-10 rounded-2xl text-gray-500 flex items-center justify-center mb-6 group hover:scale-110 border border-gray-500 hover:shadow-lg transition-all duration-500 transform">
-                <service.icon className="w-8 h-8 group-hover:text-gray-500 transition-colors duration-300" />
+                <div className="w-12 h-12 rounded-md bg-slate-50 dark:bg-slate-800 flex items-center justify-center mb-6 group-hover:bg-blue-50 dark:group-hover:bg-blue-900/20 transition-colors">
+                  <service.icon className="w-6 h-6 text-slate-600 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />
                 </div>
 
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-3">
+                  {service.title}
+                </h3>
+                
+                <p className="text-slate-600 dark:text-slate-400 mb-6 text-sm leading-relaxed">
+                  {service.description}
+                </p>
 
-                {/* Content */}
-                <div className="relative flex-1">
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">
-                    {service.title}
-                  </h3>
-                  <p className="text-sm font-medium text-blue-600 dark:text-blue-400 mb-4">
-                    {service.subtitle}
-                  </p>
-                  <p className="text-gray-600 dark:text-gray-300 mb-6 flex-grow leading-relaxed">
-                    {service.description}
-                  </p>
-                  
-                  {/* Features list with enhanced styling */}
-                  <ul className="space-y-3 mb-6">
-                    {service.features.map((feature, featureIndex) => (
-                      <motion.li 
-                        key={featureIndex} 
-                        className="flex items-start text-gray-600 dark:text-gray-300"
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={inView ? { opacity: 1, x: 0 } : {}}
-                        transition={{ duration: 0.3, delay: (index * 0.1) + (featureIndex * 0.05) }}
-                      >
-                        <div className="w-5 h-5 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mr-3 flex-shrink-0 mt-0.5">
-                          <CheckCircleIcon className="w-3 h-3 text-green-600 dark:text-green-400" />
-                        </div>
-                        <span className="text-sm leading-relaxed">{feature}</span>
-                      </motion.li>
-                    ))}
-                  </ul>
-                </div>
-                
-                {/* Bottom section */}
-                <div className="relative flex items-center justify-between mt-auto pt-4 border-t border-gray-100 dark:border-gray-700">
-                  {service.status === 'available' ? (
-                    <motion.button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        scrollToContact();
-                      }}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="btn btn-primary text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg hover:shadow-xl transition-all duration-300"
-                    >
-                      Get Started
-                      <ArrowRightIcon className="ml-2 w-5 h-5" />
-                    </motion.button>
-                  ) : (
-                    <button
-                      disabled
-                      className="btn btn-secondary text-sm disabled:opacity-50 disabled:cursor-not-allowed bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400"
-                    >
-                      Coming Soon
-                    </button>
-                  )}
-                  <div className="text-xs text-gray-500 dark:text-gray-400 flex items-center">
-                    {service.status === 'available' ? (
-                      <>
-                        <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                        Ready to deploy
-                      </>
-                    ) : (
-                      <>
-                        <SparklesIcon className="w-3 h-3 mr-2" />
-                        In development
-                      </>
-                    )}
-                  </div>
-                </div>
-                
-                {/* Hover effect overlay */}
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                <ul className="space-y-3 mb-8">
+                  {service.features.slice(0, 3).map((feature, featureIndex) => (
+                    <li key={featureIndex} className="flex items-center text-xs font-medium text-slate-500 dark:text-slate-500">
+                      <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mr-2" />
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+
+                {!isDisabled ? (
+                  <button
+                    onClick={scrollToContact}
+                    className="text-sm font-bold text-blue-600 dark:text-blue-400 flex items-center group-hover:translate-x-1 transition-transform"
+                  >
+                    Learn More
+                    <ArrowRightIcon className="ml-2 w-4 h-4" />
+                  </button>
+                ) : (
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                    Coming Soon
+                  </span>
+                )}
               </motion.div>
             );
           })}

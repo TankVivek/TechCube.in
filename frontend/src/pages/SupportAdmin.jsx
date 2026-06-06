@@ -36,10 +36,19 @@ export default function SupportAdmin() {
 
   const login = (e) => {
     e.preventDefault();
+    setError('');
     const socket = io(SOCKET_URL, { transports: ['websocket', 'polling'] });
     socketRef.current = socket;
 
-    socket.emit('admin_join', password);
+    // Wait for connection before authenticating
+    socket.on('connect', () => {
+      socket.emit('admin_join', password);
+    });
+
+    socket.on('connect_error', () => {
+      setError('Could not connect to server. Please try again.');
+    });
+
     socket.on('admin_authenticated', () => {
       setAuthed(true);
       setError('');

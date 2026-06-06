@@ -35,8 +35,8 @@ const securityHeaders = helmet({
             styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
             fontSrc: ["'self'", "https://fonts.gstatic.com"],
             imgSrc: ["'self'", "data:", "https:"],
-            scriptSrc: ["'self'"],
-            connectSrc: ["'self'", "https://techcube.in"],
+            scriptSrc: ["'self'", "'unsafe-inline'", "https://www.googletagmanager.com"],
+            connectSrc: ["'self'", "https://techcube.in", "wss://techcube.in", "ws://techcube.in", "ws://localhost:*", "wss://localhost:*", "http://localhost:*"],
         },
     },
     hsts: {

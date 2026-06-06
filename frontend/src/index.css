@@ -2,10 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
-html, body {
-  padding: 0;
-  margin: 0;
-  width: 100%;
-  min-height: 100vh;
-  background: linear-gradient(to right, #312e81, #4338ca); /* example gradient */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    @apply antialiased text-slate-900 dark:text-slate-50 bg-white dark:bg-slate-950;
+  }
 }

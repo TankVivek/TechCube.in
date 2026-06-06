@@ -35,24 +35,26 @@ export default function SupportWidget() {
     }
   }, []);
 
-  // Socket connection
+  // Socket connection — only when widget is open and ticketId exists
   useEffect(() => {
-    if (!ticketId) return;
+    if (!ticketId || !open) return;
     const socket = io(SOCKET_URL, { transports: ['websocket', 'polling'] });
     socketRef.current = socket;
-    socket.emit('join_ticket', ticketId);
+
+    socket.on('connect', () => {
+      socket.emit('join_ticket', ticketId);
+    });
 
     socket.on('new_message', (msg) => {
       setMessages(prev => [...prev, msg]);
-      if (!open) setUnread(u => u + 1);
     });
     socket.on('agent_joined', () => setAgentOnline(true));
     socket.on('ticket_closed', () => {
       setMessages(prev => [...prev, { sender: 'system', text: 'This ticket has been closed. Thank you!', time: new Date().toISOString() }]);
     });
 
-    return () => socket.disconnect();
-  }, [ticketId]);
+    return () => { socket.disconnect(); socketRef.current = null; };
+  }, [ticketId, open]);
 
   // Auto-scroll
   useEffect(() => {
