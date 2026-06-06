@@ -15,6 +15,7 @@ try {
             credential: admin.credential.cert(serviceAccount)
         });
         firebaseInitialized = true;
+        console.log("FCM: Firebase Admin SDK initialized successfully.");
     } else {
         console.log("Firebase not initialized: FIREBASE_SERVICE_ACCOUNT is missing in environment variables.");
     }
@@ -26,30 +27,41 @@ try {
 function getTokens() {
     try {
         if (!fs.existsSync(TOKENS_FILE)) {
+            console.log(`FCM: Tokens file not found at ${TOKENS_FILE}. Creating empty list.`);
             fs.mkdirSync(path.dirname(TOKENS_FILE), { recursive: true });
             fs.writeFileSync(TOKENS_FILE, JSON.stringify([]), 'utf8');
         }
-        return JSON.parse(fs.readFileSync(TOKENS_FILE, 'utf8'));
-    } catch {
+        const data = fs.readFileSync(TOKENS_FILE, 'utf8');
+        const tokens = JSON.parse(data);
+        console.log(`FCM: Loaded ${tokens.length} token(s) from storage.`);
+        return tokens;
+    } catch (err) {
+        console.error("FCM: Error reading tokens file:", err.message);
         return [];
     }
 }
 
 function saveTokens(tokens) {
     try {
+        console.log(`FCM: Saving ${tokens.length} token(s) to ${TOKENS_FILE}...`);
         fs.mkdirSync(path.dirname(TOKENS_FILE), { recursive: true });
         fs.writeFileSync(TOKENS_FILE, JSON.stringify(tokens), 'utf8');
+        console.log("FCM: Tokens saved successfully.");
     } catch (err) {
-        console.error("Failed to save FCM tokens:", err);
+        console.error("FCM: Failed to save FCM tokens:", err);
     }
 }
 
 // Add/register a token
 function registerToken(token) {
+    console.log(`FCM: Received request to register token: ${token.substring(0, 10)}...`);
     const tokens = getTokens();
     if (!tokens.includes(token)) {
         tokens.push(token);
         saveTokens(tokens);
+        console.log("FCM: Token registered successfully.");
+    } else {
+        console.log("FCM: Token already exists in registry.");
     }
 }
 

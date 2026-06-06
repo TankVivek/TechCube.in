@@ -111,11 +111,13 @@ app.post("/api/support/initiate", (req, res) => {
 app.post("/api/support/admin/fcm-token", (req, res) => {
     try {
         const { token } = req.body;
+        console.log(`API: Received FCM token registration request. Token length: ${token ? token.length : 0}`);
         if (!token) return res.status(400).json({ success: false, message: "Token required" });
         const { registerToken } = require("./src/services/notification.service");
         registerToken(token);
         res.json({ success: true, message: "Token registered successfully" });
     } catch (e) {
+        console.error("API: FCM token registration failed:", e.message);
         res.status(500).json({ success: false, message: e.message });
     }
 });
