@@ -28,16 +28,18 @@ export default function SupportAdmin() {
   const socketRef = useRef(null);
   const chatEndRef = useRef(null);
 
-  const headers = () => ({ 'x-admin-password': password });
+  const headers = (pass) => ({ 'x-admin-password': pass || password });
 
-  const loadTickets = async () => {
+  const loadTickets = async (pass) => {
     try {
-      const res = await axios.get(`${API}/api/support/tickets`, { headers: headers() });
+      const res = await axios.get(`${API}/api/support/tickets`, { 
+        headers: headers(pass) 
+      });
       if (res.data.success) setTickets(res.data.tickets);
     } catch { setError('Failed to load tickets'); }
   };
 
-  const setupNotifications = async () => {
+  const setupNotifications = async (pass) => {
     try {
       if ('serviceWorker' in navigator) {
         const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
@@ -53,13 +55,76 @@ export default function SupportAdmin() {
 
           if (token) {
             console.log('FCM Token registered:', token);
-            await axios.post(`${API}/api/support/admin/fcm-token`, { token }, { headers: headers() });
+            await axios.post(`${API}/api/support/admin/fcm-token`, { token }, { headers: headers(pass) });
           }
         }
       }
     } catch (err) {
       console.error('Failed to setup push notifications:', err);
     }
+  };
+
+  const login = (e, manualPass) => {
+    if (e) e.preventDefault();
+    const passToUse = manualPass || password;
+    if (!passToUse) return;
+
+    setError('');
+    // Disconnect old socket to prevent duplicate connection instances
+    socketRef.current?.disconnect();
+
+    const socket = io(SOCKET_URL, { transports: ['websocket', 'polling'] });
+    socketRef.current = socket;
+
+    // Wait for connection before authenticating
+    socket.on('connect', () => {
+      socket.emit('admin_join', passToUse);
+    });
+
+    socket.on('connect_error', () => {
+      setError('Could not connect to server. Please try again.');
+    });
+
+    socket.on('admin_authenticated', () => {
+      setAuthed(true);
+      setPassword(passToUse);
+      setError('');
+      loadTickets(passToUse);
+      setupNotifications(passToUse);
+      
+      // Save session for 24 hours
+      const expiry = new Date().getTime() + 24 * 60 * 60 * 1000;
+      localStorage.setItem('tc_admin_session', JSON.stringify({ password: passToUse, expiry }));
+    });
+
+    socket.on('auth_error', (msg) => {
+      setError(msg);
+      localStorage.removeItem('tc_admin_session');
+    });
+
+    // Listen for real-time updates
+    socket.on('ticket_update', ({ ticketId, msg }) => {
+      setSelected(prev => {
+        if (prev && prev.id === ticketId) {
+          // Prevent displaying duplicate messages in UI
+          const exists = prev.messages.some(m => m.time === msg.time && m.text === msg.text && m.sender === msg.sender);
+          if (exists) return prev;
+          return { ...prev, messages: [...prev.messages, msg] };
+        }
+        return prev;
+      });
+      // Refresh ticket list
+      loadTickets(passToUse);
+    });
+  };
+
+  const logout = () => {
+    localStorage.removeItem('tc_admin_session');
+    socketRef.current?.disconnect();
+    setAuthed(false);
+    setPassword('');
+    setTickets([]);
+    setSelected(null);
   };
 
   const sendEmailInstructions = async () => {
@@ -90,48 +155,6 @@ export default function SupportAdmin() {
     } catch { setError('Failed to load ticket'); }
   };
 
-  const login = (e) => {
-    e.preventDefault();
-    setError('');
-    // Disconnect old socket to prevent duplicate connection instances
-    socketRef.current?.disconnect();
-
-    const socket = io(SOCKET_URL, { transports: ['websocket', 'polling'] });
-    socketRef.current = socket;
-
-    // Wait for connection before authenticating
-    socket.on('connect', () => {
-      socket.emit('admin_join', password);
-    });
-
-    socket.on('connect_error', () => {
-      setError('Could not connect to server. Please try again.');
-    });
-
-    socket.on('admin_authenticated', () => {
-      setAuthed(true);
-      setError('');
-      loadTickets();
-      setupNotifications();
-    });
-    socket.on('auth_error', (msg) => setError(msg));
-
-    // Listen for real-time updates
-    socket.on('ticket_update', ({ ticketId, msg }) => {
-      setSelected(prev => {
-        if (prev && prev.id === ticketId) {
-          // Prevent displaying duplicate messages in UI
-          const exists = prev.messages.some(m => m.time === msg.time && m.text === msg.text && m.sender === msg.sender);
-          if (exists) return prev;
-          return { ...prev, messages: [...prev.messages, msg] };
-        }
-        return prev;
-      });
-      // Refresh ticket list
-      loadTickets();
-    });
-  };
-
   const sendReply = (e) => {
     e.preventDefault();
     if (!input.trim() || !selected) return;
@@ -145,6 +168,23 @@ export default function SupportAdmin() {
     setSelected({ ...selected, status: 'closed' });
     loadTickets();
   };
+
+  // ── Auto-login check ──
+  useEffect(() => {
+    const saved = localStorage.getItem('tc_admin_session');
+    if (saved) {
+      try {
+        const { password: p, expiry } = JSON.parse(saved);
+        if (new Date().getTime() < expiry) {
+          login(null, p);
+        } else {
+          localStorage.removeItem('tc_admin_session');
+        }
+      } catch {
+        localStorage.removeItem('tc_admin_session');
+      }
+    }
+  }, []);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -172,9 +212,17 @@ export default function SupportAdmin() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex">
       {/* Sidebar - Ticket List */}
       <div className="w-80 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 flex flex-col">
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-          <h1 className="font-bold text-lg text-gray-900 dark:text-white">Support Tickets</h1>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{filteredTickets.length} active ticket(s)</p>
+        <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+          <div>
+            <h1 className="font-bold text-lg text-gray-900 dark:text-white leading-none">Tickets</h1>
+            <p className="text-[10px] uppercase tracking-widest text-slate-500 mt-1">{filteredTickets.length} active</p>
+          </div>
+          <button 
+            onClick={logout}
+            className="text-[10px] font-bold uppercase tracking-widest px-2 py-1 border border-slate-200 dark:border-slate-800 rounded hover:bg-slate-50 dark:hover:bg-slate-800 transition text-slate-600 dark:text-slate-400"
+          >
+            Logout
+          </button>
         </div>
         <div className="flex-1 overflow-y-auto">
           {filteredTickets.map(t => (
