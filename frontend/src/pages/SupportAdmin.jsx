@@ -19,7 +19,6 @@ const firebaseConfig = {
 export default function SupportAdmin() {
   const [password, setPassword] = useState('');
   const [authed, setAuthed] = useState(false);
-  const [isInitializing, setIsInitializing] = useState(true);
   const [activeTab, setActiveTab] = useState('tickets'); // 'tickets' | 'domains'
   const [tickets, setTickets] = useState([]);
   const [domains, setDomains] = useState([]);
@@ -259,15 +258,6 @@ export default function SupportAdmin() {
   }, [selected?.messages]);
 
   useEffect(() => { return () => socketRef.current?.disconnect(); }, []);
-
-  if (isInitializing) {
-    return (
-      <div className="min-h-screen bg-white dark:bg-slate-950 flex flex-col items-center justify-center">
-        <div className="w-12 h-12 border-4 border-slate-200 dark:border-slate-800 border-t-blue-600 rounded-full animate-spin mb-4"></div>
-        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 animate-pulse">Initializing Admin Session</p>
-      </div>
-    );
-  }
 
   if (!authed) {
     return (
