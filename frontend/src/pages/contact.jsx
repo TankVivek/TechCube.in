@@ -4,6 +4,8 @@ import { useInView } from 'react-intersection-observer';
 import axios from 'axios';
 import { ArrowRightIcon } from '@heroicons/react/24/outline';
 
+const API = import.meta.env.VITE_API_URL || '';
+
 const Contact = () => {
   const [formData, setFormData] = useState({
     name: '',
@@ -47,7 +49,7 @@ const Contact = () => {
     setIsLoading(true); // Set loading state when starting submission
     
     try {
-      const response = await axios.post('https://techcube.in/api/email/send', {
+      const response = await axios.post(`${API}/api/email/send`, {
         name: formData.name,
         email: formData.email,
         message: formData.message
