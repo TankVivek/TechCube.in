@@ -97,15 +97,19 @@ function Header() {
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.6, ease: "easeOut" }}
-          className="flex items-center gap-3 cursor-pointer"
+          className="flex items-center gap-3 cursor-pointer group"
           onClick={() => handleNavClick('#home', 'home')}
         >
-          <div className="h-10 w-10 bg-slate-900 dark:bg-white rounded flex items-center justify-center overflow-hidden">
-            <img src={logo} alt="TechCube Logo" className="h-8 w-8 object-contain" />
+          <div className="h-10 w-10 bg-gradient-to-tr from-blue-600 to-indigo-600 dark:from-blue-500 dark:to-indigo-500 rounded flex items-center justify-center overflow-hidden shadow-lg group-hover:scale-110 transition-transform duration-300">
+            <img src={logo} alt="TechCube Logo" className="h-8 w-8 object-contain brightness-0 invert" />
           </div>
           <div className="flex flex-col">
-            <span className="font-bold text-xl tracking-tight text-slate-900 dark:text-white leading-none">TechCube</span>
-            <span className="text-[10px] uppercase tracking-widest text-blue-600 dark:text-blue-400 font-bold mt-1">Innovation Hub</span>
+            <span className="font-bold text-xl tracking-tight text-slate-900 dark:text-white leading-none group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+              TechCube
+            </span>
+            <span className="text-[10px] uppercase tracking-widest bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 font-bold mt-1">
+              Innovation Hub
+            </span>
           </div>
         </motion.div>
         {/* Desktop Navigation */}

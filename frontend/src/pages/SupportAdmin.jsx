@@ -30,10 +30,90 @@ export default function SupportAdmin() {
   const [emailInput, setEmailInput] = useState('');
   const [emailStatus, setEmailStatus] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
+  const [showMeetModal, setShowMeetModal] = useState(false);
+  const [manualMeetLink, setManualMeetLink] = useState('');
+  const [meetError, setMeetError] = useState('');
+  const [meetLoading, setMeetLoading] = useState(false);
   const socketRef = useRef(null);
   const chatEndRef = useRef(null);
 
   const headers = (pass) => ({ 'x-admin-password': pass || password });
+
+  const renderMessageText = (m) => {
+    const meetRegex = /(https:\/\/meet\.google\.com\/[a-z0-9-]+)/i;
+    const match = m.text.match(meetRegex);
+    if (match) {
+      const meetUrl = match[1];
+      const textWithoutUrl = m.text.replace(meetUrl, '').trim();
+      return (
+        <div className="space-y-2 my-1">
+          {textWithoutUrl && <div className="text-sm leading-relaxed">{textWithoutUrl}</div>}
+          <div className="p-3 bg-gradient-to-br from-teal-50 to-emerald-50 dark:from-teal-950/20 dark:to-emerald-950/20 rounded-xl border border-teal-200/60 dark:border-teal-800/40 shadow-sm text-left">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-8 h-8 rounded-full bg-teal-100 dark:bg-teal-900/40 flex items-center justify-center text-teal-600 dark:text-teal-400 shrink-0">
+                <svg className="w-4 h-4 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <div>
+                <h4 className="font-semibold text-xs text-teal-800 dark:text-teal-300 leading-none">Video Support Call</h4>
+                <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">Google Meet is ready</p>
+              </div>
+            </div>
+            <a 
+              href={meetUrl} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center w-full px-3 py-1.5 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white rounded-lg text-xs font-semibold shadow-sm transition-all focus:outline-none"
+            >
+              <span>Join Meeting</span>
+              <svg className="w-3.5 h-3.5 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+            </a>
+          </div>
+        </div>
+      );
+    }
+    return m.text;
+  };
+
+  const generateMeetLinkAutomatically = async () => {
+    if (!selected) return;
+    setMeetLoading(true);
+    setMeetError('');
+    try {
+      const res = await axios.post(`${API}/api/support/ticket/${selected.id}/meet`, {}, { headers: headers() });
+      if (res.data.success) {
+        setShowMeetModal(false);
+      }
+    } catch (err) {
+      console.error(err);
+      const errMsg = err.response?.data?.message || 'Failed to auto-generate Meet link.';
+      setMeetError(`${errMsg} Configure Google credentials in environment or use manual mode below.`);
+    }
+    setMeetLoading(false);
+  };
+
+  const submitManualMeetLink = (e) => {
+    e.preventDefault();
+    if (!manualMeetLink.trim() || !selected) return;
+    
+    const link = manualMeetLink.trim();
+    if (!link.startsWith('https://meet.google.com/')) {
+      setMeetError('Please enter a valid Google Meet link (starting with https://meet.google.com/)');
+      return;
+    }
+
+    socketRef.current?.emit('admin_message', { 
+      ticketId: selected.id, 
+      text: `Please join the Google Meet video support call: ${link}` 
+    });
+    
+    setManualMeetLink('');
+    setShowMeetModal(false);
+    setMeetError('');
+  };
 
   const loadTickets = async (pass) => {
     try {
@@ -378,7 +458,18 @@ export default function SupportAdmin() {
                 </div>
 
                 {selected.status === 'open' && (
-                  <button onClick={closeTicket} className="text-xs bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 px-3 py-1.5 rounded-lg hover:opacity-80 transition font-medium">Close Ticket</button>
+                  <div className="flex items-center gap-2">
+                    <button 
+                      onClick={() => setShowMeetModal(true)} 
+                      className="text-xs bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400 px-3 py-1.5 rounded-lg hover:opacity-80 transition font-medium flex items-center gap-1.5"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                      Google Meet
+                    </button>
+                    <button onClick={closeTicket} className="text-xs bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 px-3 py-1.5 rounded-lg hover:opacity-80 transition font-medium">Close Ticket</button>
+                  </div>
                 )}
               </div>
 
@@ -391,7 +482,7 @@ export default function SupportAdmin() {
                     'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-800 dark:text-yellow-200 mx-auto text-center text-xs'
                   }`}>
                     {m.sender === 'user' && <div className="text-xs font-semibold text-blue-600 dark:text-blue-400 mb-0.5">{selected.name}</div>}
-                    {m.text}
+                    {renderMessageText(m)}
                     <div className={`text-xs mt-1 ${m.sender === 'agent' ? 'text-blue-200' : 'text-gray-400'}`}>{new Date(m.time).toLocaleTimeString()}</div>
                   </div>
                 ))}
@@ -455,6 +546,98 @@ export default function SupportAdmin() {
           )
         )}
       </div>
+
+      {/* Google Meet Integration Modal */}
+      {showMeetModal && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-[99999] backdrop-blur-sm">
+          <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-in fade-in duration-200">
+            <div className="px-6 py-4 bg-gradient-to-r from-teal-600 to-emerald-600 text-white flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+                <h3 className="font-semibold text-sm">Integrate Google Meet</h3>
+              </div>
+              <button onClick={() => { setShowMeetModal(false); setMeetError(''); }} className="p-1 hover:bg-white/20 rounded transition">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-5">
+              {meetError && (
+                <div className="p-3 bg-orange-50 dark:bg-orange-950/20 text-orange-800 dark:text-orange-300 text-xs rounded-lg border border-orange-100 dark:border-orange-900/30">
+                  {meetError}
+                </div>
+              )}
+
+              {/* Automatic scheduling */}
+              <div className="space-y-2">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Automatic Link Generator</h4>
+                <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+                  Automatically schedule a meeting using the backend Google Calendar API integration.
+                </p>
+                <button
+                  type="button"
+                  onClick={generateMeetLinkAutomatically}
+                  disabled={meetLoading}
+                  className="w-full py-2.5 bg-gradient-to-r from-teal-600 to-emerald-600 hover:opacity-95 text-white rounded-lg text-xs font-semibold transition-all shadow-sm disabled:opacity-50 flex items-center justify-center gap-1.5"
+                >
+                  {meetLoading ? (
+                    <>
+                      <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      <span>Generating Meeting...</span>
+                    </>
+                  ) : 'Generate & Send Meet Link'}
+                </button>
+              </div>
+
+              <div className="relative flex py-2 items-center">
+                <div className="flex-grow border-t border-gray-200 dark:border-gray-800"></div>
+                <span className="flex-shrink mx-4 text-gray-400 text-[10px] uppercase font-bold tracking-widest">or manual share</span>
+                <div className="flex-grow border-t border-gray-200 dark:border-gray-800"></div>
+              </div>
+
+              {/* Manual Link Input */}
+              <form onSubmit={submitManualMeetLink} className="space-y-3">
+                <div>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Manual Meeting URL</h4>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-2 leading-relaxed">
+                    Open Google Meet to start an instant meeting, copy its link, and share it below.
+                  </p>
+                  <a
+                    href="https://meet.google.com/new"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 hover:underline mb-2 font-medium"
+                  >
+                    <span>Start Google Meet in new tab</span>
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                  </a>
+                </div>
+                
+                <div className="flex gap-2">
+                  <input
+                    type="url"
+                    required
+                    value={manualMeetLink}
+                    onChange={e => setManualMeetLink(e.target.value)}
+                    placeholder="https://meet.google.com/abc-defg-hij"
+                    className="flex-1 px-3 py-2 text-xs border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-teal-500"
+                  />
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-slate-900 dark:bg-white text-white dark:text-slate-950 rounded-lg text-xs font-semibold hover:opacity-90 transition shadow-sm"
+                  >
+                    Send
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
