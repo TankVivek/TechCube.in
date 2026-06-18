@@ -4,6 +4,7 @@ const path = require("path");
 const compression = require("compression");
 const http = require("http");
 const mongoose = require("mongoose");
+const crypto = require("crypto");
 require("dotenv").config();
 const fs = require('fs');
 
@@ -126,6 +127,42 @@ app.post("/api/support/initiate", (req, res) => {
             support.addMessage(ticket.id, 'system', 'No agent is currently online. Your message has been saved as a support ticket. We will get back to you soon!');
         }
         res.json({ success: true, ticket: { id: ticket.id, status: ticket.status }, agentOnline });
+    } catch (e) {
+        res.status(500).json({ success: false, message: e.message });
+    }
+});
+
+// Support Chat Image Upload (Base64)
+app.post("/api/support/upload", (req, res) => {
+    try {
+        const { image } = req.body;
+        if (!image) return res.status(400).json({ success: false, message: "No image data provided" });
+
+        // Match base64 data format
+        const matches = image.match(/^data:image\/([a-zA-Z+]+);base64,(.+)$/);
+        if (!matches || matches.length !== 3) {
+            return res.status(400).json({ success: false, message: "Invalid image format" });
+        }
+
+        const ext = matches[1] === 'jpeg' ? 'jpg' : matches[1];
+        const buffer = Buffer.from(matches[2], 'base64');
+        
+        // Limit size to 5MB
+        if (buffer.length > 5 * 1024 * 1024) {
+            return res.status(400).json({ success: false, message: "Image exceeds 5MB limit" });
+        }
+
+        const filename = `${crypto?.randomBytes ? crypto.randomBytes(8).toString('hex') : Date.now()}_upload.${ext}`;
+        const uploadsDir = path.join(__dirname, "uploads");
+        if (!fs.existsSync(uploadsDir)) {
+            fs.mkdirSync(uploadsDir, { recursive: true });
+        }
+        const filepath = path.join(uploadsDir, filename);
+
+        fs.writeFileSync(filepath, buffer);
+        
+        const fileUrl = `/uploads/${filename}`;
+        res.json({ success: true, url: fileUrl });
     } catch (e) {
         res.status(500).json({ success: false, message: e.message });
     }
@@ -267,8 +304,8 @@ io.on("connection", (socket) => {
     });
 
     // User sends a message
-    socket.on("user_message", ({ ticketId, text }) => {
-        const msg = support.addMessage(ticketId, 'user', text);
+    socket.on("user_message", ({ ticketId, text, image }) => {
+        const msg = support.addMessage(ticketId, 'user', text, image);
         if (msg) {
             io.to(`ticket_${ticketId}`).emit('new_message', msg);
             // Notify admin room about new message
@@ -283,9 +320,9 @@ io.on("connection", (socket) => {
     });
 
     // Admin sends a reply
-    socket.on("admin_message", ({ ticketId, text }) => {
+    socket.on("admin_message", ({ ticketId, text, image }) => {
         if (!socket.isAdmin) return;
-        const msg = support.addMessage(ticketId, 'agent', text);
+        const msg = support.addMessage(ticketId, 'agent', text, image);
         if (msg) {
             io.to(`ticket_${ticketId}`).emit('new_message', msg);
             io.to("admin_room").emit('ticket_update', { ticketId, msg });
@@ -296,6 +333,9 @@ io.on("connection", (socket) => {
         if (socket.isAdmin) adminSockets.delete(socket.id);
     });
 });
+
+// Serve uploaded images statically
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Serve static files from the frontend build directory
 app.use(express.static(path.join(__dirname, "../frontend/dist")));

@@ -77,10 +77,10 @@ function createTicket(name, email) {
   return ticket;
 }
 
-function addMessage(ticketId, sender, text) {
+function addMessage(ticketId, sender, text, image = null) {
   const ticket = loadTicket(ticketId);
   if (!ticket) return null;
-  const msg = { sender, text, time: new Date().toISOString() };
+  const msg = { sender, text, image, time: new Date().toISOString() };
   ticket.messages.push(msg);
   saveTicket(ticket);
   return msg;

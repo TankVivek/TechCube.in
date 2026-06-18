@@ -20,6 +20,16 @@ const firebaseConfig = {
 export default function SupportAdmin() {
   const [password, setPassword] = useState('');
   const [authed, setAuthed] = useState(false);
+  const [initializing, setInitializing] = useState(() => {
+    const saved = localStorage.getItem('tc_admin_session');
+    if (!saved) return false;
+    try {
+      const { expiry } = JSON.parse(saved);
+      return new Date().getTime() < expiry;
+    } catch {
+      return false;
+    }
+  });
   const [activeTab, setActiveTab] = useState('tickets'); // 'tickets' | 'domains'
   const [tickets, setTickets] = useState([]);
   const [domains, setDomains] = useState([]);
@@ -34,37 +44,85 @@ export default function SupportAdmin() {
   const [manualMeetLink, setManualMeetLink] = useState('');
   const [meetError, setMeetError] = useState('');
   const [meetLoading, setMeetLoading] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null); // Lightbox
+  const [showMobileChat, setShowMobileChat] = useState(false);
   const socketRef = useRef(null);
   const chatEndRef = useRef(null);
 
   const headers = (pass) => ({ 'x-admin-password': pass || password });
 
+  const getActiveMeeting = () => {
+    const meetRegex = /(https:\/\/(?:meet\.google\.com|meet\.jit\.si|zoom\.us)\/[a-z0-9.-]+)/i;
+    const lastMeetingMsg = [...(selected?.messages || [])].reverse().find(m => meetRegex.test(m.text));
+    if (lastMeetingMsg) {
+      return lastMeetingMsg.text.match(meetRegex)[1];
+    }
+    return null;
+  };
+
+  const activeMeeting = getActiveMeeting();
+
   const renderMessageText = (m) => {
-    const meetRegex = /(https:\/\/meet\.google\.com\/[a-z0-9-]+)/i;
+    const meetRegex = /(https:\/\/(meet\.google\.com|meet\.jit\.si|zoom\.us)\/[a-z0-9.-]+)/i;
     const match = m.text.match(meetRegex);
     if (match) {
       const meetUrl = match[1];
+      const isJitsi = meetUrl.includes('jit.si');
+      const isZoom = meetUrl.includes('zoom.us');
       const textWithoutUrl = m.text.replace(meetUrl, '').trim();
+      
+      let theme = {
+        bg: 'from-teal-50 to-emerald-50 dark:from-teal-950/20 dark:to-emerald-950/20',
+        border: 'border-teal-200/60 dark:border-teal-800/40',
+        iconBg: 'bg-teal-100 dark:bg-teal-900/40',
+        iconText: 'text-teal-600 dark:text-teal-400',
+        title: 'Video Support Call',
+        subtitle: 'Google Meet is ready',
+        btn: 'from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700'
+      };
+
+      if (isJitsi) {
+        theme = {
+          bg: 'from-purple-50 to-indigo-50 dark:from-purple-950/20 dark:to-indigo-950/20',
+          border: 'border-purple-200/60 dark:border-purple-800/40',
+          iconBg: 'bg-purple-100 dark:bg-purple-900/40',
+          iconText: 'text-purple-600 dark:text-purple-400',
+          title: 'Secure Video Call',
+          subtitle: 'Jitsi Meet is ready',
+          btn: 'from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700'
+        };
+      } else if (isZoom) {
+        theme = {
+          bg: 'from-blue-50 to-sky-50 dark:from-blue-950/20 dark:to-sky-950/20',
+          border: 'border-blue-200/60 dark:border-blue-800/40',
+          iconBg: 'bg-blue-100 dark:bg-blue-900/40',
+          iconText: 'text-blue-600 dark:text-blue-400',
+          title: 'Zoom Meeting',
+          subtitle: 'Zoom is ready',
+          btn: 'from-blue-600 to-sky-600 hover:from-blue-700 hover:to-sky-700'
+        };
+      }
+
       return (
         <div className="space-y-2 my-1">
           {textWithoutUrl && <div className="text-sm leading-relaxed">{textWithoutUrl}</div>}
-          <div className="p-3 bg-gradient-to-br from-teal-50 to-emerald-50 dark:from-teal-950/20 dark:to-emerald-950/20 rounded-xl border border-teal-200/60 dark:border-teal-800/40 shadow-sm text-left">
+          <div className={`p-3 bg-gradient-to-br ${theme.bg} rounded-xl border ${theme.border} shadow-sm text-left`}>
             <div className="flex items-center gap-2 mb-2">
-              <div className="w-8 h-8 rounded-full bg-teal-100 dark:bg-teal-900/40 flex items-center justify-center text-teal-600 dark:text-teal-400 shrink-0">
+              <div className={`w-8 h-8 rounded-full ${theme.iconBg} flex items-center justify-center ${theme.iconText} shrink-0`}>
                 <svg className="w-4 h-4 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                 </svg>
               </div>
               <div>
-                <h4 className="font-semibold text-xs text-teal-800 dark:text-teal-300 leading-none">Video Support Call</h4>
-                <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">Google Meet is ready</p>
+                <h4 className={`font-semibold text-xs ${theme.iconText.replace('text-', 'text-').replace('400', '300')} leading-none`}>{theme.title}</h4>
+                <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">{theme.subtitle}</p>
               </div>
             </div>
             <a 
               href={meetUrl} 
               target="_blank" 
               rel="noopener noreferrer"
-              className="inline-flex items-center justify-center w-full px-3 py-1.5 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white rounded-lg text-xs font-semibold shadow-sm transition-all focus:outline-none"
+              className={`inline-flex items-center justify-center w-full px-3 py-1.5 bg-gradient-to-r ${theme.btn} text-white rounded-lg text-xs font-semibold shadow-sm transition-all focus:outline-none`}
             >
               <span>Join Meeting</span>
               <svg className="w-3.5 h-3.5 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -95,24 +153,67 @@ export default function SupportAdmin() {
     setMeetLoading(false);
   };
 
+  const generateJitsiLink = () => {
+    if (!selected) return;
+    const roomName = `TechCubeSupport_${selected.id.slice(0, 8)}_${Math.random().toString(36).substring(7)}`;
+    const link = `https://meet.jit.si/${roomName}`;
+    socketRef.current?.emit('admin_message', { 
+      ticketId: selected.id, 
+      text: `Please join the secure video support call: ${link}` 
+    });
+    setShowMeetModal(false);
+  };
+
   const submitManualMeetLink = (e) => {
     e.preventDefault();
     if (!manualMeetLink.trim() || !selected) return;
     
     const link = manualMeetLink.trim();
-    if (!link.startsWith('https://meet.google.com/')) {
-      setMeetError('Please enter a valid Google Meet link (starting with https://meet.google.com/)');
+    const validDomains = ['meet.google.com', 'zoom.us', 'meet.jit.si'];
+    const isValid = validDomains.some(d => link.includes(d));
+
+    if (!isValid) {
+      setMeetError('Please enter a valid Google Meet, Zoom, or Jitsi link.');
       return;
     }
 
     socketRef.current?.emit('admin_message', { 
       ticketId: selected.id, 
-      text: `Please join the Google Meet video support call: ${link}` 
+      text: `Please join the video support call: ${link}` 
     });
     
     setManualMeetLink('');
     setShowMeetModal(false);
     setMeetError('');
+  };
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file || !selected) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image size exceeds 5MB limit.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const base64 = reader.result;
+      try {
+        const res = await axios.post(`${API}/api/support/upload`, { image: base64 });
+        if (res.data.success) {
+          socketRef.current?.emit('admin_message', { 
+            ticketId: selected.id, 
+            text: '', 
+            image: res.data.url 
+          });
+        }
+      } catch (err) {
+        console.error('Upload failed:', err);
+      }
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
   };
 
   const loadTickets = async (pass) => {
@@ -235,6 +336,7 @@ export default function SupportAdmin() {
 
     socket.on('connect_error', () => {
       setError('Could not connect to server. Please try again.');
+      setInitializing(false);
     });
 
     socket.on('admin_authenticated', () => {
@@ -244,6 +346,7 @@ export default function SupportAdmin() {
       loadTickets(passToUse);
       loadDomains(passToUse);
       setupNotifications(passToUse);
+      setInitializing(false);
       
       // Save session for 24 hours
       const expiry = new Date().getTime() + 24 * 60 * 60 * 1000;
@@ -253,6 +356,7 @@ export default function SupportAdmin() {
     socket.on('auth_error', (msg) => {
       setError(msg);
       localStorage.removeItem('tc_admin_session');
+      setInitializing(false);
     });
 
     // Listen for real-time updates
@@ -281,6 +385,7 @@ export default function SupportAdmin() {
     setDomains([]);
     setSelected(null);
     setSelectedDomain(null);
+    setShowMobileChat(false);
   };
 
   const sendEmailInstructions = async () => {
@@ -307,6 +412,7 @@ export default function SupportAdmin() {
         setEmailInput(res.data.ticket.email);
         setEmailStatus('');
         socketRef.current?.emit('admin_join_ticket', id);
+        setShowMobileChat(true);
       }
     } catch { setError('Failed to load ticket'); }
   };
@@ -335,10 +441,14 @@ export default function SupportAdmin() {
           login(null, p);
         } else {
           localStorage.removeItem('tc_admin_session');
+          setInitializing(false);
         }
       } catch {
         localStorage.removeItem('tc_admin_session');
+        setInitializing(false);
       }
+    } else {
+      setInitializing(false);
     }
   }, []);
 
@@ -347,6 +457,17 @@ export default function SupportAdmin() {
   }, [selected?.messages]);
 
   useEffect(() => { return () => socketRef.current?.disconnect(); }, []);
+
+  if (initializing) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex flex-col items-center justify-center px-4 animate-in fade-in duration-200">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-blue-600/20 border-t-blue-600 rounded-full animate-spin"></div>
+          <p className="text-sm font-semibold text-gray-600 dark:text-gray-400 animate-pulse">Reconnecting session...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!authed) {
     return (
@@ -365,9 +486,9 @@ export default function SupportAdmin() {
   const filteredTickets = tickets.filter(t => t.status !== 'closed');
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex">
-      {/* Sidebar */}
-      <div className="w-80 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 flex flex-col">
+    <div className="h-screen bg-gray-50 dark:bg-gray-950 flex overflow-hidden">
+      {/* Sidebar - Hidden on mobile if chat is open */}
+      <div className={`${showMobileChat ? 'hidden sm:flex' : 'flex'} w-full sm:w-80 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 flex-col shrink-0`}>
         <div className="p-4 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between mb-4">
             <h1 className="font-bold text-lg text-gray-900 dark:text-white leading-none">Admin</h1>
@@ -428,62 +549,81 @@ export default function SupportAdmin() {
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col">
+      {/* Main Content - Shown on mobile if chat is open */}
+      <div className={`${!showMobileChat && 'hidden sm:flex'} flex-1 flex flex-col h-full overflow-hidden bg-gray-50 dark:bg-gray-950`}>
         {activeTab === 'tickets' ? (
           selected ? (
             <>
               {/* Chat Header */}
-              <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex items-center justify-between gap-4">
-                <div>
-                  <div className="font-semibold text-gray-900 dark:text-white">{selected.name}</div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">{selected.email} · Ticket #{selected.id?.slice(0,6)} · {selected.status}</div>
+              <div className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shrink-0">
+                <div className="flex items-center gap-3 w-full sm:w-auto">
+                  <button onClick={() => setShowMobileChat(false)} className="sm:hidden p-2 -ml-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition" aria-label="Back to list">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"/></svg>
+                  </button>
+                  <div className="truncate">
+                    <div className="font-bold text-gray-900 dark:text-white truncate">{selected.name}</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400 truncate">{selected.email} · #{selected.id?.slice(0,6)}</div>
+                  </div>
                 </div>
                 
-                <div className="flex items-center gap-2 ml-auto">
-                  <input 
-                    type="email" 
-                    value={emailInput} 
-                    onChange={e => setEmailInput(e.target.value)} 
-                    placeholder="Client Email" 
-                    className="text-xs px-2.5 py-1.5 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500 w-48"
-                  />
+                <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0 scrollbar-hide">
                   <button 
-                    onClick={sendEmailInstructions} 
+                    onClick={() => sendEmailInstructions()} 
                     disabled={emailStatus === 'sending'} 
-                    className="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-md font-medium transition disabled:opacity-50"
+                    className="shrink-0 text-[10px] sm:text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg font-bold uppercase tracking-wider transition disabled:opacity-50"
                   >
                     {emailStatus === 'sending' ? 'Sending...' : emailStatus || 'Email Instructions'}
                   </button>
-                </div>
 
-                {selected.status === 'open' && (
-                  <div className="flex items-center gap-2">
-                    <button 
-                      onClick={() => setShowMeetModal(true)} 
-                      className="text-xs bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400 px-3 py-1.5 rounded-lg hover:opacity-80 transition font-medium flex items-center gap-1.5"
-                    >
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                      </svg>
-                      Google Meet
-                    </button>
-                    <button onClick={closeTicket} className="text-xs bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 px-3 py-1.5 rounded-lg hover:opacity-80 transition font-medium">Close Ticket</button>
-                  </div>
-                )}
+                  {selected.status === 'open' && (
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button 
+                        onClick={() => setShowMeetModal(true)} 
+                        className="text-[10px] sm:text-xs bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400 px-3 py-1.5 rounded-lg hover:opacity-80 transition font-bold uppercase tracking-wider flex items-center gap-1.5"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                        Meeting
+                      </button>
+                      <button onClick={closeTicket} className="text-[10px] sm:text-xs bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 px-3 py-1.5 rounded-lg hover:opacity-80 transition font-bold uppercase tracking-wider">Close</button>
+                    </div>
+                  )}
+                </div>
               </div>
 
+              {/* Active Meeting Banner */}
+              {activeMeeting && (
+                <div className="bg-teal-600 text-white px-6 py-2 flex items-center justify-between text-[11px] sm:text-xs font-semibold shrink-0">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-white rounded-full animate-ping"></div>
+                    <span>Active Meeting: {activeMeeting}</span>
+                  </div>
+                  <a href={activeMeeting} target="_blank" rel="noopener noreferrer" className="underline hover:opacity-80 transition">Join Call</a>
+                </div>
+              )}
+
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-6 space-y-3 bg-gray-50 dark:bg-gray-950">
+              <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 bg-gray-50 dark:bg-gray-950">
                 {selected.messages?.map((m, i) => (
-                  <div key={i} className={`max-w-[70%] px-4 py-2.5 rounded-xl text-sm whitespace-pre-wrap break-words ${
-                    m.sender === 'agent' ? 'bg-blue-600 text-white ml-auto' :
-                    m.sender === 'user' ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700' :
-                    'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-800 dark:text-yellow-200 mx-auto text-center text-xs'
-                  }`}>
-                    {m.sender === 'user' && <div className="text-xs font-semibold text-blue-600 dark:text-blue-400 mb-0.5">{selected.name}</div>}
-                    {renderMessageText(m)}
-                    <div className={`text-xs mt-1 ${m.sender === 'agent' ? 'text-blue-200' : 'text-gray-400'}`}>{new Date(m.time).toLocaleTimeString()}</div>
+                  <div key={i} className={`flex flex-col ${m.sender === 'agent' ? 'items-end' : m.sender === 'user' ? 'items-start' : 'items-center'}`}>
+                    <div className={`max-w-[85%] sm:max-w-[70%] px-4 py-2.5 rounded-2xl text-sm whitespace-pre-wrap break-words shadow-sm ${
+                      m.sender === 'agent' ? 'bg-blue-600 text-white' :
+                      m.sender === 'user' ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700' :
+                      'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-800 dark:text-yellow-200 mx-auto text-center text-xs'
+                    }`}>
+                      {m.sender === 'user' && <div className="text-[10px] font-bold uppercase tracking-widest text-blue-600 dark:text-blue-400 mb-1">{selected.name}</div>}
+                      {m.image && (
+                        <img 
+                          src={m.image.startsWith('http') ? m.image : `${API}${m.image}`} 
+                          alt="Upload" 
+                          className="rounded-lg mb-2 max-w-full cursor-pointer hover:opacity-90 transition" 
+                          onClick={() => setSelectedImage(m.image.startsWith('http') ? m.image : `${API}${m.image}`)}
+                        />
+                      )}
+                      {m.text && renderMessageText(m)}
+                    </div>
+                    <div className={`text-[10px] mt-1 px-1 ${m.sender === 'agent' ? 'text-blue-600/50' : 'text-gray-400'}`}>{new Date(m.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
                   </div>
                 ))}
                 <div ref={chatEndRef} />
@@ -491,44 +631,77 @@ export default function SupportAdmin() {
 
               {/* Reply Box */}
               {selected.status === 'open' && (
-                <form onSubmit={sendReply} className="flex border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-3 gap-2">
-                  <input value={input} onChange={e => setInput(e.target.value)} placeholder="Type a reply..." className="flex-1 px-4 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500" />
-                  <button type="submit" className="bg-blue-600 text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-blue-700 transition">Send</button>
+                <form onSubmit={sendReply} className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-3 sm:p-4 shrink-0">
+                  <div className="flex items-end gap-2 max-w-5xl mx-auto">
+                    <div className="flex-1 bg-gray-100 dark:bg-gray-800 rounded-2xl flex items-end p-1.5 focus-within:ring-2 focus-within:ring-blue-500/20 transition">
+                      {/* Image Upload Button */}
+                      <label className="p-2 text-gray-500 hover:text-blue-600 cursor-pointer transition shrink-0">
+                        <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                      </label>
+                      <textarea 
+                        rows="1"
+                        value={input} 
+                        onChange={e => setInput(e.target.value)} 
+                        onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendReply(e); } }}
+                        placeholder="Type a reply..." 
+                        className="flex-1 py-2 px-2 text-sm bg-transparent text-gray-900 dark:text-white focus:outline-none resize-none max-h-32" 
+                      />
+                    </div>
+                    <button 
+                      type="submit" 
+                      disabled={!input.trim()}
+                      className="w-10 h-10 sm:w-auto sm:px-6 bg-blue-600 text-white rounded-full sm:rounded-xl flex items-center justify-center hover:bg-blue-700 transition disabled:opacity-50 font-bold uppercase tracking-wider text-xs shadow-lg shadow-blue-500/20 shrink-0"
+                    >
+                      <span className="hidden sm:inline">Send Reply</span>
+                      <svg className="sm:hidden w-5 h-5 rotate-90" fill="currentColor" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+                    </button>
+                  </div>
                 </form>
               )}
             </>
           ) : (
             <div className="flex-1 flex items-center justify-center text-gray-400 dark:text-gray-500">
-              <div className="text-center">
-                <svg className="w-16 h-16 mx-auto mb-4 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
-                <p className="text-sm">Select a ticket to start replying</p>
+              <div className="text-center p-8">
+                <div className="w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-10 h-10 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                </div>
+                <h3 className="font-bold text-gray-900 dark:text-white mb-1">No ticket selected</h3>
+                <p className="text-sm">Select a ticket from the sidebar to start chatting.</p>
               </div>
             </div>
           )
         ) : (
           selectedDomain ? (
-            <div className="p-8 overflow-y-auto">
-              <div className="max-w-4xl">
-                <div className="flex items-center justify-between mb-8 border-b border-slate-200 dark:border-slate-800 pb-6">
+            <div className="p-4 sm:p-8 overflow-y-auto flex-1">
+              <div className="max-w-4xl mx-auto">
+                <div className="flex items-center gap-3 mb-6 sm:hidden">
+                  <button onClick={() => setSelectedDomain(null)} className="p-2 -ml-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"/></svg>
+                  </button>
+                  <h2 className="text-xl font-bold text-slate-900 dark:text-white">Domain Details</h2>
+                </div>
+
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 border-b border-slate-200 dark:border-slate-800 pb-6 gap-4">
                   <div>
                     <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">{selectedDomain.name}</h2>
-                    <p className="text-sm text-slate-500 uppercase tracking-widest font-bold">Domain Infrastructure</p>
+                    <p className="text-xs text-slate-500 uppercase tracking-widest font-bold">Domain Infrastructure</p>
                   </div>
                   <button 
                     onClick={() => verifyDomain(selectedDomain.id)}
                     disabled={isVerifying}
-                    className="bg-blue-600 text-white text-xs font-bold uppercase tracking-widest px-4 py-2 rounded-md hover:bg-blue-700 transition disabled:opacity-50"
+                    className="bg-blue-600 text-white text-[10px] font-bold uppercase tracking-widest px-4 py-2.5 rounded-lg hover:bg-blue-700 transition disabled:opacity-50 shadow-lg shadow-blue-500/20"
                   >
                     {isVerifying ? 'Checking...' : 'Check Verification'}
                   </button>
                 </div>
 
                 <div className="grid grid-cols-1 gap-6">
-                  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-6">
-                    <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-widest mb-4">DNS Configuration</h3>
+                  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
+                    <h3 className="text-[10px] font-bold text-slate-900 dark:text-white uppercase tracking-widest mb-6">DNS Configuration</h3>
                     <div className="space-y-4">
                       {selectedDomain.records?.map((record, idx) => (
-                        <div key={idx} className="p-4 bg-slate-50 dark:bg-slate-950 rounded border border-slate-100 dark:border-slate-800 font-mono text-[10px]">
+                        <div key={idx} className="p-4 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-100 dark:border-slate-800 font-mono text-[10px]">
                           <div className="flex gap-4 mb-2">
                             <span className="text-blue-600 dark:text-blue-400 font-bold uppercase">{record.type}</span>
                             <span className="text-slate-400">{record.name}</span>
@@ -542,52 +715,75 @@ export default function SupportAdmin() {
               </div>
             </div>
           ) : (
-            <div className="flex-1 flex items-center justify-center text-gray-400"><p>Select a domain to view configuration</p></div>
+            <div className="flex-1 flex items-center justify-center text-gray-400 p-8 text-center">
+              <div>
+                <div className="w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-10 h-10 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
+                </div>
+                <h3 className="font-bold text-gray-900 dark:text-white mb-1">No domain selected</h3>
+                <p className="text-sm">Select a domain from the sidebar to view configuration.</p>
+              </div>
+            </div>
           )
         )}
       </div>
 
-      {/* Google Meet Integration Modal */}
+      {/* Video Meeting Integration Modal */}
       {showMeetModal && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-[99999] backdrop-blur-sm">
-          <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-in fade-in duration-200">
-            <div className="px-6 py-4 bg-gradient-to-r from-teal-600 to-emerald-600 text-white flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                </svg>
-                <h3 className="font-semibold text-sm">Integrate Google Meet</h3>
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-[99999] backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-3xl shadow-2xl max-w-md w-full overflow-hidden">
+            <div className="px-6 py-5 bg-gradient-to-r from-teal-600 to-emerald-600 text-white flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <h3 className="font-bold text-sm uppercase tracking-wider">Video Meeting Tools</h3>
               </div>
-              <button onClick={() => { setShowMeetModal(false); setMeetError(''); }} className="p-1 hover:bg-white/20 rounded transition">
+              <button onClick={() => { setShowMeetModal(false); setMeetError(''); }} className="p-2 hover:bg-white/20 rounded-full transition">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>
               </button>
             </div>
             
-            <div className="p-6 space-y-5">
+            <div className="p-6 space-y-6">
               {meetError && (
-                <div className="p-3 bg-orange-50 dark:bg-orange-950/20 text-orange-800 dark:text-orange-300 text-xs rounded-lg border border-orange-100 dark:border-orange-900/30">
+                <div className="p-3 bg-orange-50 dark:bg-orange-950/20 text-orange-800 dark:text-orange-300 text-xs rounded-xl border border-orange-100 dark:border-orange-900/30">
                   {meetError}
                 </div>
               )}
 
-              {/* Automatic scheduling */}
+              {/* Jitsi Meet - Instant */}
               <div className="space-y-2">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Automatic Link Generator</h4>
-                <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
-                  Automatically schedule a meeting using the backend Google Calendar API integration.
-                </p>
+                <div className="flex items-center justify-between">
+                  <h4 className="text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">Instant Meeting (Jitsi)</h4>
+                  <span className="text-[10px] font-bold text-green-600 bg-green-50 dark:bg-green-900/20 px-2 py-0.5 rounded">Free & Unlimited</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={generateJitsiLink}
+                  className="w-full py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:opacity-95 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-lg shadow-purple-500/20 flex items-center justify-center gap-2"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                  Send Jitsi Meeting Link
+                </button>
+              </div>
+
+              {/* Google Meet - Automatic */}
+              <div className="space-y-2">
+                <h4 className="text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">Google Meet Integration</h4>
                 <button
                   type="button"
                   onClick={generateMeetLinkAutomatically}
                   disabled={meetLoading}
-                  className="w-full py-2.5 bg-gradient-to-r from-teal-600 to-emerald-600 hover:opacity-95 text-white rounded-lg text-xs font-semibold transition-all shadow-sm disabled:opacity-50 flex items-center justify-center gap-1.5"
+                  className="w-full py-3 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-900 dark:text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   {meetLoading ? (
-                    <>
-                      <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                      <span>Generating Meeting...</span>
-                    </>
-                  ) : 'Generate & Send Meet Link'}
+                    <div className="w-4 h-4 border-2 border-gray-400 border-t-gray-900 rounded-full animate-spin"></div>
+                  ) : (
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                  )}
+                  Auto-Generate Google Meet
                 </button>
               </div>
 
@@ -599,36 +795,19 @@ export default function SupportAdmin() {
 
               {/* Manual Link Input */}
               <form onSubmit={submitManualMeetLink} className="space-y-3">
-                <div>
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Manual Meeting URL</h4>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-2 leading-relaxed">
-                    Open Google Meet to start an instant meeting, copy its link, and share it below.
-                  </p>
-                  <a
-                    href="https://meet.google.com/new"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 hover:underline mb-2 font-medium"
-                  >
-                    <span>Start Google Meet in new tab</span>
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                    </svg>
-                  </a>
-                </div>
-                
+                <h4 className="text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">Paste Meeting URL (Zoom/Google/Jitsi)</h4>
                 <div className="flex gap-2">
                   <input
                     type="url"
                     required
                     value={manualMeetLink}
                     onChange={e => setManualMeetLink(e.target.value)}
-                    placeholder="https://meet.google.com/abc-defg-hij"
-                    className="flex-1 px-3 py-2 text-xs border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-teal-500"
+                    placeholder="https://zoom.us/j/123..."
+                    className="flex-1 px-4 py-2.5 text-sm border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500/20"
                   />
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-slate-900 dark:bg-white text-white dark:text-slate-950 rounded-lg text-xs font-semibold hover:opacity-90 transition shadow-sm"
+                    className="px-6 py-2.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-xl text-xs font-bold uppercase tracking-wider hover:opacity-90 transition shadow-lg"
                   >
                     Send
                   </button>
@@ -636,6 +815,16 @@ export default function SupportAdmin() {
               </form>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Image Lightbox */}
+      {selectedImage && (
+        <div className="fixed inset-0 z-[100000] bg-black/95 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200">
+          <button onClick={() => setSelectedImage(null)} className="absolute top-6 right-6 text-white hover:text-gray-300 transition p-2">
+            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+          <img src={selectedImage} alt="Fullscreen" className="max-w-full max-h-full object-contain rounded-2xl shadow-2xl" />
         </div>
       )}
     </div>
