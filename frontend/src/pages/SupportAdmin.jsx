@@ -19,6 +19,7 @@ const firebaseConfig = {
 
 export default function SupportAdmin() {
   const [password, setPassword] = useState('');
+  const [username, setUsername] = useState('');
   const [authed, setAuthed] = useState(false);
   const [initializing, setInitializing] = useState(() => {
     const saved = localStorage.getItem('tc_admin_session');
@@ -108,7 +109,7 @@ export default function SupportAdmin() {
           border: 'border-pink-200/60 dark:border-pink-800/40',
           iconBg: 'bg-pink-100 dark:bg-pink-900/40',
           iconText: 'text-pink-600 dark:text-pink-400',
-          title: 'Talky Video Chat',
+          title: 'Video Call',
           subtitle: 'Talky.io is ready',
           btn: 'from-pink-600 to-rose-600 hover:from-pink-700 hover:to-rose-700'
         };
@@ -460,9 +461,9 @@ export default function SupportAdmin() {
     const saved = localStorage.getItem('tc_admin_session');
     if (saved) {
       try {
-        const { password: p, expiry } = JSON.parse(saved);
+        const { username: u, password: p, expiry } = JSON.parse(saved);
         if (new Date().getTime() < expiry) {
-          login(null, p);
+          login(null, p, u);
         } else {
           localStorage.removeItem('tc_admin_session');
           setInitializing(false);
@@ -498,8 +499,9 @@ export default function SupportAdmin() {
       <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center px-4">
         <form onSubmit={login} className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl p-8 w-full max-w-sm border border-gray-200 dark:border-gray-700">
           <h1 className="text-xl font-bold text-gray-900 dark:text-white mb-1">Support Admin</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Enter the admin password to continue.</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Enter your credentials to continue.</p>
           {error && <div className="text-red-500 text-sm mb-3 bg-red-50 dark:bg-red-900/20 p-2 rounded">{error}</div>}
+          <input type="text" value={username} onChange={e => setUsername(e.target.value)} placeholder="Username" className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" />
           <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Password" className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" />
           <button type="submit" className="w-full bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-2.5 rounded-lg font-medium hover:opacity-90 transition">Login</button>
         </form>

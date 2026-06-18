@@ -242,7 +242,7 @@ export default function SupportWidget() {
           border: 'border-pink-200/60 dark:border-pink-800/40',
           iconBg: 'bg-pink-100 dark:bg-pink-900/40',
           iconText: 'text-pink-600 dark:text-pink-400',
-          title: 'Talky Video Chat',
+          title: 'Video Call',
           subtitle: 'Talky.io is ready',
           btn: 'from-pink-600 to-rose-600 hover:from-pink-700 hover:to-rose-700'
         };
