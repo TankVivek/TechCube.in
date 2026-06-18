@@ -30,7 +30,7 @@ export default function SupportAdmin() {
       return false;
     }
   });
-  const [activeTab, setActiveTab] = useState('tickets'); // 'tickets' | 'domains'
+    const [activeTab, setActiveTab] = useState('tickets'); // 'tickets' | 'domains'
   const [tickets, setTickets] = useState([]);
   const [domains, setDomains] = useState([]);
   const [selected, setSelected] = useState(null); // full ticket object
@@ -52,8 +52,8 @@ export default function SupportAdmin() {
   const headers = (pass) => ({ 'x-admin-password': pass || password });
 
   const getActiveMeeting = () => {
-    const meetRegex = /(https:\/\/(?:meet\.google\.com|meet\.jit\.si|zoom\.us)\/[a-z0-9.-]+)/i;
-    const lastMeetingMsg = [...(selected?.messages || [])].reverse().find(m => meetRegex.test(m.text));
+    const meetRegex = /(https:\/\/(?:meet\.google\.com|meet\.jit\.si|zoom\.us|talky\.io)\/[a-z0-9_.-]+)/i;
+    const lastMeetingMsg = [...(selected?.messages || [])].reverse().find(m => m.text && meetRegex.test(m.text));
     if (lastMeetingMsg) {
       return lastMeetingMsg.text.match(meetRegex)[1];
     }
@@ -63,12 +63,13 @@ export default function SupportAdmin() {
   const activeMeeting = getActiveMeeting();
 
   const renderMessageText = (m) => {
-    const meetRegex = /(https:\/\/(meet\.google\.com|meet\.jit\.si|zoom\.us)\/[a-z0-9.-]+)/i;
+    const meetRegex = /(https:\/\/(meet\.google\.com|meet\.jit\.si|zoom\.us|talky\.io)\/[a-z0-9_.-]+)/i;
     const match = m.text.match(meetRegex);
     if (match) {
       const meetUrl = match[1];
       const isJitsi = meetUrl.includes('jit.si');
       const isZoom = meetUrl.includes('zoom.us');
+      const isTalky = meetUrl.includes('talky.io');
       const textWithoutUrl = m.text.replace(meetUrl, '').trim();
       
       let theme = {
@@ -100,6 +101,16 @@ export default function SupportAdmin() {
           title: 'Zoom Meeting',
           subtitle: 'Zoom is ready',
           btn: 'from-blue-600 to-sky-600 hover:from-blue-700 hover:to-sky-700'
+        };
+      } else if (isTalky) {
+        theme = {
+          bg: 'from-pink-50 to-rose-50 dark:from-pink-950/20 dark:to-rose-950/20',
+          border: 'border-pink-200/60 dark:border-pink-800/40',
+          iconBg: 'bg-pink-100 dark:bg-pink-900/40',
+          iconText: 'text-pink-600 dark:text-pink-400',
+          title: 'Talky Video Chat',
+          subtitle: 'Talky.io is ready',
+          btn: 'from-pink-600 to-rose-600 hover:from-pink-700 hover:to-rose-700'
         };
       }
 
@@ -164,16 +175,27 @@ export default function SupportAdmin() {
     setShowMeetModal(false);
   };
 
+  const generateTalkyLink = () => {
+    if (!selected) return;
+    const roomName = `TechCubeSupport_${selected.id.slice(0, 8)}_${Math.random().toString(36).substring(7)}`;
+    const link = `https://talky.io/${roomName}`;
+    socketRef.current?.emit('admin_message', { 
+      ticketId: selected.id, 
+      text: `Please join the Talky video support call: ${link}` 
+    });
+    setShowMeetModal(false);
+  };
+
   const submitManualMeetLink = (e) => {
     e.preventDefault();
     if (!manualMeetLink.trim() || !selected) return;
     
     const link = manualMeetLink.trim();
-    const validDomains = ['meet.google.com', 'zoom.us', 'meet.jit.si'];
+    const validDomains = ['meet.google.com', 'zoom.us', 'meet.jit.si', 'talky.io'];
     const isValid = validDomains.some(d => link.includes(d));
 
     if (!isValid) {
-      setMeetError('Please enter a valid Google Meet, Zoom, or Jitsi link.');
+      setMeetError('Please enter a valid Google Meet, Zoom, Jitsi, or Talky link.');
       return;
     }
 
@@ -317,9 +339,10 @@ export default function SupportAdmin() {
     }
   };
 
-  const login = (e, manualPass) => {
+  const login = (e, manualPass, manualUser) => {
     if (e) e.preventDefault();
     const passToUse = manualPass || password;
+    const userToUse = manualUser || username;
     if (!passToUse) return;
 
     setError('');
@@ -342,6 +365,7 @@ export default function SupportAdmin() {
     socket.on('admin_authenticated', () => {
       setAuthed(true);
       setPassword(passToUse);
+      setUsername(userToUse);
       setError('');
       loadTickets(passToUse);
       loadDomains(passToUse);
@@ -350,7 +374,7 @@ export default function SupportAdmin() {
       
       // Save session for 24 hours
       const expiry = new Date().getTime() + 24 * 60 * 60 * 1000;
-      localStorage.setItem('tc_admin_session', JSON.stringify({ password: passToUse, expiry }));
+      localStorage.setItem('tc_admin_session', JSON.stringify({ username: userToUse, password: passToUse, expiry }));
     });
 
     socket.on('auth_error', (msg) => {
@@ -766,6 +790,22 @@ export default function SupportAdmin() {
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                   Send Jitsi Meeting Link
+                </button>
+              </div>
+
+              {/* Talky.io - Instant */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">Instant Meeting (Talky)</h4>
+                  <span className="text-[10px] font-bold text-pink-600 bg-pink-50 dark:bg-pink-900/20 px-2 py-0.5 rounded">Free & Instant</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={generateTalkyLink}
+                  className="w-full py-3 bg-gradient-to-r from-pink-600 to-rose-600 hover:opacity-95 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-lg shadow-pink-500/20 flex items-center justify-center gap-2"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                  Send Talky.io Meeting Link
                 </button>
               </div>
 

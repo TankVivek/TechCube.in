@@ -21,6 +21,7 @@ export default function SupportWidget() {
   const chatEndRef = useRef(null);
   const [unread, setUnread] = useState(0);
   const [selectedImage, setSelectedImage] = useState(null); // For lightbox
+  const [showVideoModal, setShowVideoModal] = useState(false); // For customer video call
 
   // ── Restore session from localStorage on mount ──
   useEffect(() => {
@@ -104,12 +105,13 @@ export default function SupportWidget() {
   };
 
   // ── Send a message ──
-  const sendMessage = (e, imgUrl = null) => {
+  const sendMessage = (e, imgUrl = null, customText = null) => {
     if (e) e.preventDefault();
-    if (!input.trim() && !imgUrl) return;
+    const textToSend = customText !== null ? customText : input.trim();
+    if (!textToSend && !imgUrl) return;
     if (!socketRef.current) return;
-    socketRef.current.emit('user_message', { ticketId, text: input.trim(), image: imgUrl });
-    setInput('');
+    socketRef.current.emit('user_message', { ticketId, text: textToSend, image: imgUrl });
+    if (customText === null) setInput('');
   };
 
   // ── Handle Image Upload ──
@@ -178,8 +180,8 @@ export default function SupportWidget() {
   };
 
   const getActiveMeeting = () => {
-    const meetRegex = /(https:\/\/(?:meet\.google\.com|meet\.jit\.si|zoom\.us)\/[a-z0-9.-]+)/i;
-    const lastMeetingMsg = [...messages].reverse().find(m => meetRegex.test(m.text));
+    const meetRegex = /(https:\/\/(?:meet\.google\.com|meet\.jit\.si|zoom\.us|talky\.io)\/[a-z0-9_.-]+)/i;
+    const lastMeetingMsg = [...messages].reverse().find(m => m.text && meetRegex.test(m.text));
     if (lastMeetingMsg) {
       return lastMeetingMsg.text.match(meetRegex)[1];
     }
@@ -195,12 +197,13 @@ export default function SupportWidget() {
   };
 
   const renderMessageText = (m) => {
-    const meetRegex = /(https:\/\/(meet\.google\.com|meet\.jit\.si|zoom\.us)\/[a-z0-9.-]+)/i;
+    const meetRegex = /(https:\/\/(meet\.google\.com|meet\.jit\.si|zoom\.us|talky\.io)\/[a-z0-9_.-]+)/i;
     const match = m.text.match(meetRegex);
     if (match) {
       const meetUrl = match[1];
       const isJitsi = meetUrl.includes('jit.si');
       const isZoom = meetUrl.includes('zoom.us');
+      const isTalky = meetUrl.includes('talky.io');
       const textWithoutUrl = m.text.replace(meetUrl, '').trim();
       
       let theme = {
@@ -232,6 +235,16 @@ export default function SupportWidget() {
           title: 'Zoom Meeting',
           subtitle: 'Zoom is ready',
           btn: 'from-blue-600 to-sky-600 hover:from-blue-700 hover:to-sky-700'
+        };
+      } else if (isTalky) {
+        theme = {
+          bg: 'from-pink-50 to-rose-50 dark:from-pink-950/20 dark:to-rose-950/20',
+          border: 'border-pink-200/60 dark:border-pink-800/40',
+          iconBg: 'bg-pink-100 dark:bg-pink-900/40',
+          iconText: 'text-pink-600 dark:text-pink-400',
+          title: 'Talky Video Chat',
+          subtitle: 'Talky.io is ready',
+          btn: 'from-pink-600 to-rose-600 hover:from-pink-700 hover:to-rose-700'
         };
       }
 
@@ -319,6 +332,14 @@ export default function SupportWidget() {
               {/* End Session button — only in active chat */}
               {step === 'chat' && !confirmEnd && (
                 <button onClick={() => setConfirmEnd(true)} className="text-[10px] uppercase font-bold tracking-wider bg-white/20 hover:bg-white/30 px-2 py-1 rounded transition">End Session</button>
+              )}
+              {/* Video Call Request button — only in active chat */}
+              {step === 'chat' && (
+                <button onClick={() => setShowVideoModal(true)} className="p-1.5 hover:bg-white/20 rounded-lg transition" title="Start Video Call" aria-label="Start Video Call">
+                  <svg className="w-5 h-5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                </button>
               )}
               {/* Minimize button for mobile/desktop */}
               <button onClick={() => setOpen(false)} className="p-1.5 hover:bg-white/20 rounded-lg transition" aria-label="Minimize">
@@ -461,6 +482,59 @@ export default function SupportWidget() {
             <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>
           </button>
           <img src={selectedImage} alt="Fullscreen" className="max-w-full max-h-full object-contain rounded-lg shadow-2xl" />
+        </div>
+      )}
+
+      {/* Customer Video Call Modal */}
+      {showVideoModal && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-[99999] backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl shadow-2xl max-w-xs w-full overflow-hidden">
+            <div className="px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-700 text-white flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+                <h3 className="font-bold text-xs uppercase tracking-wider">Start Video Call</h3>
+              </div>
+              <button onClick={() => setShowVideoModal(false)} className="p-1.5 hover:bg-white/20 rounded-full transition">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>
+              </button>
+            </div>
+            
+            <div className="p-4 space-y-3">
+              <p className="text-[11px] text-gray-500 dark:text-gray-400 text-center leading-relaxed">
+                Generate and share a free, instant meeting link. No signups or downloads required.
+              </p>
+
+              {/* Jitsi Meet Option */}
+              <button
+                type="button"
+                onClick={() => {
+                  const roomName = `TechCubeSupport_${ticketId.slice(0, 6)}_${Math.random().toString(36).substring(7)}`;
+                  const link = `https://meet.jit.si/${roomName}`;
+                  sendMessage(null, null, `Please join my secure video call: ${link}`);
+                  setShowVideoModal(false);
+                }}
+                className="w-full py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:opacity-95 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-sm"
+              >
+                Jitsi Meet (Free)
+              </button>
+
+              {/* Talky.io Option */}
+              <button
+                type="button"
+                onClick={() => {
+                  const roomName = `TechCubeSupport_${ticketId.slice(0, 6)}_${Math.random().toString(36).substring(7)}`;
+                  const link = `https://talky.io/${roomName}`;
+                  sendMessage(null, null, `Please join my Talky video chat: ${link}`);
+                  setShowVideoModal(false);
+                }}
+                className="w-full py-2.5 bg-gradient-to-r from-pink-600 to-rose-600 hover:opacity-95 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-sm"
+              >
+                Talky.io (Free)
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </>

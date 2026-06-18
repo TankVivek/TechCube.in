@@ -42,12 +42,13 @@ export default function SupportTicket() {
     : 'bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-400';
 
   const renderMessageText = (m) => {
-    const meetRegex = /(https:\/\/(meet\.google\.com|meet\.jit\.si|zoom\.us)\/[a-z0-9.-]+)/i;
+    const meetRegex = /(https:\/\/(meet\.google\.com|meet\.jit\.si|zoom\.us|talky\.io)\/[a-z0-9_.-]+)/i;
     const match = m.text.match(meetRegex);
     if (match) {
       const meetUrl = match[1];
       const isJitsi = meetUrl.includes('jit.si');
       const isZoom = meetUrl.includes('zoom.us');
+      const isTalky = meetUrl.includes('talky.io');
       const textWithoutUrl = m.text.replace(meetUrl, '').trim();
       
       let theme = {
@@ -79,6 +80,16 @@ export default function SupportTicket() {
           title: 'Zoom Meeting',
           subtitle: 'Zoom is ready',
           btn: 'from-blue-600 to-sky-600 hover:from-blue-700 hover:to-sky-700'
+        };
+      } else if (isTalky) {
+        theme = {
+          bg: 'from-pink-50 to-rose-50 dark:from-pink-950/20 dark:to-rose-950/20',
+          border: 'border-pink-200/60 dark:border-pink-800/40',
+          iconBg: 'bg-pink-100 dark:bg-pink-900/40',
+          iconText: 'text-pink-600 dark:text-pink-400',
+          title: 'Talky Video Chat',
+          subtitle: 'Talky.io is ready',
+          btn: 'from-pink-600 to-rose-600 hover:from-pink-700 hover:to-rose-700'
         };
       }
 
