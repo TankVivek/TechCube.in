@@ -19,6 +19,46 @@ function getIceServers() {
   ];
 }
 
+async function requestMedia() {
+  if (!navigator.mediaDevices?.getUserMedia) {
+    const err = new Error("Media devices not supported in this browser.");
+    err.name = "NotSupportedError";
+    throw err;
+  }
+
+  const attempts = [
+    { video: { facingMode: "user" }, audio: { echoCancellation: true, noiseSuppression: true } },
+    { video: true, audio: true },
+    { video: false, audio: true },
+  ];
+
+  let lastError;
+  for (const constraints of attempts) {
+    try {
+      return await navigator.mediaDevices.getUserMedia(constraints);
+    } catch (err) {
+      lastError = err;
+    }
+  }
+  throw lastError;
+}
+
+function mediaErrorMessage(err) {
+  if (err?.name === "NotAllowedError") {
+    return "Camera/microphone access was denied. Tap “Enable camera & mic” and allow permissions in your browser.";
+  }
+  if (err?.name === "NotFoundError") {
+    return "No camera or microphone found on this device.";
+  }
+  if (err?.name === "NotReadableError") {
+    return "Camera or microphone is in use by another app. Close it and try again.";
+  }
+  if (err?.name === "NotSupportedError") {
+    return "This browser does not support video calls. Try Chrome or Safari.";
+  }
+  return "Couldn't access camera/microphone. Tap “Enable camera & mic” to try again.";
+}
+
 export default function VideoCall() {
   const { roomId } = useParams();
   const navigate = useNavigate();
@@ -26,8 +66,11 @@ export default function VideoCall() {
   const [status, setStatus] = useState("idle");
   const [micOn, setMicOn] = useState(true);
   const [camOn, setCamOn] = useState(true);
-  const [error, setError] = useState("");
-  const [joining, setJoining] = useState(false);
+  const [fatalError, setFatalError] = useState("");
+  const [mediaWarning, setMediaWarning] = useState("");
+  const [joining, setJoining] = useState(true);
+  const [enablingMedia, setEnablingMedia] = useState(false);
+  const [hasLocalMedia, setHasLocalMedia] = useState(false);
 
   const socketRef = useRef(null);
   const peerRef = useRef(null);
@@ -35,6 +78,14 @@ export default function VideoCall() {
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
   const startedRef = useRef(false);
+
+  const attachLocalStream = useCallback((stream) => {
+    localStreamRef.current = stream;
+    if (localVideoRef.current) localVideoRef.current.srcObject = stream;
+    setHasLocalMedia(true);
+    setMicOn(stream.getAudioTracks().some((t) => t.enabled));
+    setCamOn(stream.getVideoTracks().some((t) => t.enabled));
+  }, []);
 
   const cleanup = useCallback(() => {
     peerRef.current?.destroy();
@@ -46,7 +97,16 @@ export default function VideoCall() {
     startedRef.current = false;
   }, []);
 
-  const wirePeerEvents = useCallback((peer, remoteSocketId, socket) => {
+  const createPeer = useCallback((initiator, remoteSocketId, socket, stream) => {
+    const opts = {
+      initiator,
+      trickle: true,
+      config: { iceServers: getIceServers() },
+    };
+    if (stream) opts.stream = stream;
+
+    const peer = new Peer(opts);
+
     peer.on("signal", (data) => {
       socket.emit("signal", { to: remoteSocketId, data });
     });
@@ -54,98 +114,110 @@ export default function VideoCall() {
     peer.on("stream", (remoteStream) => {
       if (remoteVideoRef.current) remoteVideoRef.current.srcObject = remoteStream;
       setStatus("connected");
+      setMediaWarning("");
     });
 
     peer.on("close", () => setStatus("waiting"));
     peer.on("error", (err) => {
       console.error("Peer error:", err);
-      setError("Connection lost. Waiting for the other person to rejoin…");
+      setMediaWarning("Connection interrupted. Waiting for the other person…");
     });
+
+    peerRef.current = peer;
+    return peer;
   }, []);
 
-  const startCall = useCallback(async () => {
+  const tryAcquireMedia = useCallback(async () => {
+    try {
+      const stream = await requestMedia();
+      attachLocalStream(stream);
+      setMediaWarning("");
+
+      if (peerRef.current && !peerRef.current.destroyed) {
+        try {
+          peerRef.current.addStream(stream);
+        } catch {
+          // Peer may already have a stream attached
+        }
+      }
+      return true;
+    } catch (err) {
+      console.error(err);
+      setMediaWarning(mediaErrorMessage(err));
+      return false;
+    }
+  }, [attachLocalStream]);
+
+  const enableMedia = async () => {
+    setEnablingMedia(true);
+    await tryAcquireMedia();
+    setEnablingMedia(false);
+  };
+
+  const startCall = useCallback(() => {
     if (!roomId?.trim() || startedRef.current) return;
 
     startedRef.current = true;
     setJoining(true);
-    setError("");
+    setFatalError("");
+    setMediaWarning("");
 
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: true,
-        audio: true,
-      });
-      localStreamRef.current = stream;
-      if (localVideoRef.current) localVideoRef.current.srcObject = stream;
+    // Join the signaling room immediately so the other person is not left waiting.
+    const socket = io(SOCKET_URL, { transports: ["websocket", "polling"] });
+    socketRef.current = socket;
 
-      const socket = io(SOCKET_URL, { transports: ["websocket", "polling"] });
-      socketRef.current = socket;
+    socket.on("connect_error", () => {
+      setFatalError("Could not connect to the call server. Please check your connection and try again.");
+      setJoining(false);
+      cleanup();
+    });
 
-      socket.on("connect_error", () => {
-        setError("Could not connect to the call server. Please try again.");
-        setJoining(false);
-        cleanup();
-      });
+    socket.on("connect", () => {
+      socket.emit("join-room", roomId.trim());
+      setStatus("waiting");
+      setJoining(false);
 
-      socket.on("connect", () => {
-        socket.emit("join-room", roomId.trim());
-        setStatus("waiting");
-        setJoining(false);
-      });
-
-      socket.on("room-full", () => {
-        setError("This call room is full. Only two participants are allowed.");
-        cleanup();
-        setStatus("ended");
-        setJoining(false);
-      });
-
-      socket.on("peer-joined", ({ peerId }) => {
-        setStatus("connecting");
-        const peer = new Peer({
-          initiator: true,
-          trickle: true,
-          stream,
-          config: { iceServers: getIceServers() },
-        });
-        wirePeerEvents(peer, peerId, socket);
-        peerRef.current = peer;
-      });
-
-      socket.on("signal", ({ from, data }) => {
-        if (!peerRef.current) {
-          setStatus("connecting");
-          const peer = new Peer({
-            initiator: false,
-            trickle: true,
-            stream,
-            config: { iceServers: getIceServers() },
-          });
-          wirePeerEvents(peer, from, socket);
-          peerRef.current = peer;
-          peer.signal(data);
-        } else {
-          peerRef.current.signal(data);
+      // Request media in parallel — fall back to receive-only if it fails.
+      tryAcquireMedia().then((ok) => {
+        if (!ok) {
+          setMediaWarning(
+            (prev) =>
+              prev ||
+              "Joined in listen-only mode. Tap “Enable camera & mic” so the other person can see and hear you."
+          );
         }
       });
+    });
 
-      socket.on("peer-left", () => {
-        setStatus("waiting");
-        if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
-        peerRef.current?.destroy();
-        peerRef.current = null;
-      });
-    } catch (err) {
-      console.error(err);
-      setError(
-        err.name === "NotAllowedError"
-          ? "Camera/microphone access was denied. Please allow permissions and refresh."
-          : "Couldn't access camera/microphone. Check permissions and try again."
-      );
+    socket.on("room-full", () => {
+      setFatalError("This call room is full. Only two participants are allowed.");
+      cleanup();
+      setStatus("ended");
       setJoining(false);
-      startedRef.current = false;
-    }
-  }, [roomId, cleanup, wirePeerEvents]);
+    });
+
+    socket.on("peer-joined", ({ peerId }) => {
+      setStatus("connecting");
+      createPeer(true, peerId, socket, localStreamRef.current);
+    });
+
+    socket.on("signal", ({ from, data }) => {
+      if (!peerRef.current) {
+        setStatus("connecting");
+        const peer = createPeer(false, from, socket, localStreamRef.current);
+        peer.signal(data);
+      } else {
+        peerRef.current.signal(data);
+      }
+    });
+
+    socket.on("peer-left", () => {
+      setStatus("waiting");
+      if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
+      peerRef.current?.destroy();
+      peerRef.current = null;
+    });
+  }, [roomId, cleanup, createPeer, tryAcquireMedia]);
 
   useEffect(() => {
     if (roomId?.trim()) startCall();
@@ -174,6 +246,15 @@ export default function VideoCall() {
     setStatus("ended");
   };
 
+  const retryJoin = () => {
+    cleanup();
+    setStatus("idle");
+    setFatalError("");
+    setMediaWarning("");
+    setJoining(true);
+    startCall();
+  };
+
   const statusLabel = {
     idle: "",
     waiting: "Waiting for the other person to join…",
@@ -181,6 +262,8 @@ export default function VideoCall() {
     connected: "Connected",
     ended: "Call ended",
   }[status];
+
+  const hasLocalVideo = hasLocalMedia && !!localStreamRef.current?.getVideoTracks().length;
 
   if (!roomId?.trim()) {
     return (
@@ -196,27 +279,30 @@ export default function VideoCall() {
     );
   }
 
-  if (joining || (status === "idle" && !error)) {
+  if (fatalError) {
     return (
       <div className="vc-lobby">
         <div className="vc-lobby-card">
-          <div className="vc-spinner" style={{ margin: "0 auto 16px" }} />
-          <h2>Joining call…</h2>
-          <p className="vc-subtext">Setting up camera and microphone</p>
+          <h2>Unable to join</h2>
+          <p className="vc-error">{fatalError}</p>
+          <button className="vc-btn vc-btn-primary" onClick={retryJoin} style={{ marginBottom: 8 }}>
+            Try Again
+          </button>
+          <button className="vc-btn" onClick={() => navigate("/")} style={{ background: "#2a2e37", color: "#f2f3f5" }}>
+            Go Home
+          </button>
         </div>
       </div>
     );
   }
 
-  if (status === "ended" && error) {
+  if (joining) {
     return (
       <div className="vc-lobby">
         <div className="vc-lobby-card">
-          <h2>Unable to join</h2>
-          <p className="vc-error">{error}</p>
-          <button className="vc-btn vc-btn-primary" onClick={() => navigate("/")}>
-            Go Home
-          </button>
+          <div className="vc-spinner" style={{ margin: "0 auto 16px" }} />
+          <h2>Joining call…</h2>
+          <p className="vc-subtext">Connecting to the call room</p>
         </div>
       </div>
     );
@@ -225,9 +311,15 @@ export default function VideoCall() {
   return (
     <div className="vc-room">
       <div className={`vc-status vc-status-${status}`}>{statusLabel}</div>
-      {error && status !== "ended" && (
-        <div className="vc-status" style={{ top: 48, color: "#ffb4b4" }}>
-          {error}
+
+      {mediaWarning && (
+        <div className="vc-media-banner">
+          <p>{mediaWarning}</p>
+          {!hasLocalMedia && (
+            <button className="vc-btn vc-btn-primary vc-enable-btn" onClick={enableMedia} disabled={enablingMedia}>
+              {enablingMedia ? "Enabling…" : "Enable camera & mic"}
+            </button>
+          )}
         </div>
       )}
 
@@ -236,34 +328,39 @@ export default function VideoCall() {
         {status !== "connected" && (
           <div className="vc-placeholder">
             <div className="vc-spinner" />
+            <p className="vc-placeholder-text">
+              {status === "waiting" ? "Waiting for the other person…" : "Connecting…"}
+            </p>
           </div>
         )}
         <video ref={localVideoRef} className="vc-local-video" autoPlay playsInline muted />
+        {!hasLocalVideo && (
+          <div className="vc-local-video vc-local-placeholder">
+            <span>No camera</span>
+          </div>
+        )}
       </div>
 
       <div className="vc-controls">
         <button
-          className={`vc-icon-btn ${micOn ? "" : "vc-icon-btn-off"}`}
+          className={`vc-icon-btn ${micOn && hasLocalMedia ? "" : "vc-icon-btn-off"}`}
           onClick={toggleMic}
+          disabled={!hasLocalMedia || !localStreamRef.current?.getAudioTracks().length}
           title={micOn ? "Mute mic" : "Unmute mic"}
           aria-label={micOn ? "Mute microphone" : "Unmute microphone"}
         >
           {micOn ? "🎤" : "🔇"}
         </button>
         <button
-          className={`vc-icon-btn ${camOn ? "" : "vc-icon-btn-off"}`}
+          className={`vc-icon-btn ${camOn && hasLocalVideo ? "" : "vc-icon-btn-off"}`}
           onClick={toggleCam}
+          disabled={!hasLocalVideo}
           title={camOn ? "Turn off camera" : "Turn on camera"}
           aria-label={camOn ? "Turn off camera" : "Turn on camera"}
         >
           {camOn ? "📷" : "🚫"}
         </button>
-        <button
-          className="vc-icon-btn vc-icon-btn-end"
-          onClick={endCall}
-          title="End call"
-          aria-label="End call"
-        >
+        <button className="vc-icon-btn vc-icon-btn-end" onClick={endCall} title="End call" aria-label="End call">
           📞
         </button>
       </div>

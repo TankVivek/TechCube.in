@@ -36,7 +36,7 @@ async function registerToken(token) {
         await FcmToken.findOneAndUpdate(
             { token },
             { createdAt: new Date() },
-            { upsert: true, new: true }
+            { upsert: true, returnDocument: 'after' }
         );
         console.log("FCM: Token registered/updated in MongoDB successfully.");
     } catch (err) {
