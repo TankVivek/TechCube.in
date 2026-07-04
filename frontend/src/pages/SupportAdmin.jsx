@@ -3,6 +3,8 @@ import { io } from 'socket.io-client';
 import axios from 'axios';
 import { initializeApp } from 'firebase/app';
 import { getMessaging, getToken, onMessage } from 'firebase/messaging';
+import MeetingLinkCard from '../components/MeetingLinkCard';
+import { extractMeetingUrl } from '../utils/meetingLinks';
 
 const API = import.meta.env.VITE_API_URL || '';
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || (window.location.origin);
@@ -53,10 +55,9 @@ export default function SupportAdmin() {
   const headers = (pass) => ({ 'x-admin-password': pass || password });
 
   const getActiveMeeting = () => {
-    const meetRegex = /(https:\/\/(?:meet\.google\.com|meet\.jit\.si|zoom\.us|talky\.io)\/[a-z0-9_.-]+)/i;
-    const lastMeetingMsg = [...(selected?.messages || [])].reverse().find(m => m.text && meetRegex.test(m.text));
+    const lastMeetingMsg = [...(selected?.messages || [])].reverse().find(m => m.text && extractMeetingUrl(m.text));
     if (lastMeetingMsg) {
-      return lastMeetingMsg.text.match(meetRegex)[1];
+      return extractMeetingUrl(lastMeetingMsg.text);
     }
     return null;
   };
@@ -64,88 +65,25 @@ export default function SupportAdmin() {
   const activeMeeting = getActiveMeeting();
 
   const renderMessageText = (m) => {
-    const meetRegex = /(https:\/\/(meet\.google\.com|meet\.jit\.si|zoom\.us|talky\.io)\/[a-z0-9_.-]+)/i;
-    const match = m.text.match(meetRegex);
-    if (match) {
-      const meetUrl = match[1];
-      const isJitsi = meetUrl.includes('jit.si');
-      const isZoom = meetUrl.includes('zoom.us');
-      const isTalky = meetUrl.includes('talky.io');
-      const textWithoutUrl = m.text.replace(meetUrl, '').trim();
-      
-      let theme = {
-        bg: 'from-teal-50 to-emerald-50 dark:from-teal-950/20 dark:to-emerald-950/20',
-        border: 'border-teal-200/60 dark:border-teal-800/40',
-        iconBg: 'bg-teal-100 dark:bg-teal-900/40',
-        iconText: 'text-teal-600 dark:text-teal-400',
-        title: 'Video Support Call',
-        subtitle: 'Google Meet is ready',
-        btn: 'from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700'
-      };
-
-      if (isJitsi) {
-        theme = {
-          bg: 'from-purple-50 to-indigo-50 dark:from-purple-950/20 dark:to-indigo-950/20',
-          border: 'border-purple-200/60 dark:border-purple-800/40',
-          iconBg: 'bg-purple-100 dark:bg-purple-900/40',
-          iconText: 'text-purple-600 dark:text-purple-400',
-          title: 'Secure Video Call',
-          subtitle: 'Jitsi Meet is ready',
-          btn: 'from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700'
-        };
-      } else if (isZoom) {
-        theme = {
-          bg: 'from-blue-50 to-sky-50 dark:from-blue-950/20 dark:to-sky-950/20',
-          border: 'border-blue-200/60 dark:border-blue-800/40',
-          iconBg: 'bg-blue-100 dark:bg-blue-900/40',
-          iconText: 'text-blue-600 dark:text-blue-400',
-          title: 'Zoom Meeting',
-          subtitle: 'Zoom is ready',
-          btn: 'from-blue-600 to-sky-600 hover:from-blue-700 hover:to-sky-700'
-        };
-      } else if (isTalky) {
-        theme = {
-          bg: 'from-pink-50 to-rose-50 dark:from-pink-950/20 dark:to-rose-950/20',
-          border: 'border-pink-200/60 dark:border-pink-800/40',
-          iconBg: 'bg-pink-100 dark:bg-pink-900/40',
-          iconText: 'text-pink-600 dark:text-pink-400',
-          title: 'Video Call',
-          subtitle: 'Talky.io is ready',
-          btn: 'from-pink-600 to-rose-600 hover:from-pink-700 hover:to-rose-700'
-        };
-      }
-
-      return (
-        <div className="space-y-2 my-1">
-          {textWithoutUrl && <div className="text-sm leading-relaxed">{textWithoutUrl}</div>}
-          <div className={`p-3 bg-gradient-to-br ${theme.bg} rounded-xl border ${theme.border} shadow-sm text-left`}>
-            <div className="flex items-center gap-2 mb-2">
-              <div className={`w-8 h-8 rounded-full ${theme.iconBg} flex items-center justify-center ${theme.iconText} shrink-0`}>
-                <svg className="w-4 h-4 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                </svg>
-              </div>
-              <div>
-                <h4 className={`font-semibold text-xs ${theme.iconText.replace('text-', 'text-').replace('400', '300')} leading-none`}>{theme.title}</h4>
-                <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">{theme.subtitle}</p>
-              </div>
-            </div>
-            <a 
-              href={meetUrl} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className={`inline-flex items-center justify-center w-full px-3 py-1.5 bg-gradient-to-r ${theme.btn} text-white rounded-lg text-xs font-semibold shadow-sm transition-all focus:outline-none`}
-            >
-              <span>Join Meeting</span>
-              <svg className="w-3.5 h-3.5 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-              </svg>
-            </a>
-          </div>
-        </div>
-      );
-    }
+    if (extractMeetingUrl(m.text)) return <MeetingLinkCard text={m.text} />;
     return m.text;
+  };
+
+  const generateTechCubeCall = async () => {
+    if (!selected) return;
+    setMeetLoading(true);
+    setMeetError('');
+    try {
+      const res = await axios.post(`${API}/api/support/ticket/${selected.id}/video-call`, {}, { headers: headers() });
+      if (res.data.success) {
+        window.open(res.data.callUrl, '_blank', 'noopener,noreferrer');
+        setShowMeetModal(false);
+      }
+    } catch (err) {
+      console.error(err);
+      setMeetError(err.response?.data?.message || 'Failed to create TechCube video call room.');
+    }
+    setMeetLoading(false);
   };
 
   const generateMeetLinkAutomatically = async () => {
@@ -778,6 +716,36 @@ export default function SupportAdmin() {
                   {meetError}
                 </div>
               )}
+
+              {/* TechCube Native WebRTC — Recommended */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">TechCube Video Call</h4>
+                  <span className="text-[10px] font-bold text-blue-600 bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded">Recommended</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={generateTechCubeCall}
+                  disabled={meetLoading}
+                  className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:opacity-95 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {meetLoading ? (
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  ) : (
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                  )}
+                  Start TechCube Video Call
+                </button>
+                <p className="text-[10px] text-gray-400">Opens a secure 1-to-1 call and sends the link to the customer.</p>
+              </div>
+
+              <div className="relative flex py-2 items-center">
+                <div className="flex-grow border-t border-gray-200 dark:border-gray-800"></div>
+                <span className="flex-shrink mx-4 text-gray-400 text-[10px] uppercase font-bold tracking-widest">or third-party</span>
+                <div className="flex-grow border-t border-gray-200 dark:border-gray-800"></div>
+              </div>
 
               {/* Jitsi Meet - Instant */}
               <div className="space-y-2">

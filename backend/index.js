@@ -220,6 +220,32 @@ app.post("/api/support/ticket/:id/close", (req, res) => {
     res.json({ success: true });
 });
 
+// Admin: create native TechCube WebRTC video call room
+app.post("/api/support/ticket/:id/video-call", (req, res) => {
+    try {
+        const pass = req.headers['x-admin-password'];
+        if (pass !== ADMIN_PASS) return res.status(401).json({ success: false, message: "Unauthorized" });
+
+        const ticketId = req.params.id;
+        const ticket = support.loadTicket(ticketId);
+        if (!ticket) return res.status(404).json({ success: false, message: "Ticket not found" });
+
+        const roomId = `tc-${ticketId.slice(0, 8)}-${crypto.randomBytes(6).toString('hex')}`;
+        const frontendBase = (process.env.FRONTEND_URL || req.headers.origin || 'https://techcube.in').replace(/\/$/, '');
+        const callUrl = `${frontendBase}/video-call/${roomId}`;
+
+        const msg = support.addMessage(ticketId, 'agent', `Please join the TechCube video support call: ${callUrl}`);
+        if (msg) {
+            io.to(`ticket_${ticketId}`).emit('new_message', msg);
+            io.to("admin_room").emit('ticket_update', { ticketId, msg });
+        }
+
+        res.json({ success: true, roomId, callUrl });
+    } catch (e) {
+        res.status(500).json({ success: false, message: e.message });
+    }
+});
+
 // Admin: generate Google Meet link automatically
 app.post("/api/support/ticket/:id/meet", async (req, res) => {
     try {
@@ -278,7 +304,11 @@ app.post("/api/support/ticket/:id/send-email-instructions", async (req, res) => 
 });
 
 // ── Socket.io Events ────────────────────────────────────────────────
+const videoRooms = new Map(); // In-memory store for video call rooms
+
 io.on("connection", (socket) => {
+
+    // ─── Support Chat Logic ───────────
 
     // User joins their ticket room
     socket.on("join_ticket", (ticketId) => {
@@ -329,8 +359,57 @@ io.on("connection", (socket) => {
         }
     });
 
+    // ─── WebRTC Signaling Logic ───────────
+
+     socket.on("join-room", (roomId) => {
+        const existing = videoRooms.get(roomId) || [];
+
+        if (existing.length >= 2) {
+            socket.emit("room-full");
+            return;
+        }
+
+        existing.push(socket.id);
+        videoRooms.set(roomId, existing);
+        socket.join(roomId);
+        socket.data.roomId = roomId; // Use socket.data for custom properties
+
+        // Tell the other person in the room (if any) that a peer joined
+        const otherUser = existing.find((id) => id !== socket.id);
+        if (otherUser) {
+            // The person who was already waiting becomes the "initiator"
+            io.to(otherUser).emit("peer-joined", { peerId: socket.id });
+        }
+    });
+
+    socket.on("signal", ({ to, data }) => {
+        // Forward signal to the specific peer
+        io.to(to).emit("signal", { from: socket.id, data });
+    });
+
+    socket.on("call-ended", () => {
+        const roomId = socket.data.roomId;
+        if (roomId) {
+            // Notify other user in the room that the peer has left
+            socket.to(roomId).emit("peer-left");
+        }
+    });
+
     socket.on("disconnect", () => {
+        // Chat disconnect
         if (socket.isAdmin) adminSockets.delete(socket.id);
+
+        // Video disconnect
+        const roomId = socket.data.roomId;
+        if (roomId && videoRooms.has(roomId)) {
+            const updated = videoRooms.get(roomId).filter((id) => id !== socket.id);
+            if (updated.length === 0) {
+                videoRooms.delete(roomId);
+            } else {
+                videoRooms.set(roomId, updated);
+            }
+            socket.to(roomId).emit("peer-left");
+        }
     });
 });
 

@@ -1,0 +1,248 @@
+:root {
+  --vc-bg: #0f1115;
+  --vc-surface: #1a1d24;
+  --vc-accent: #5b8def;
+  --vc-danger: #e5484d;
+  --vc-text: #f2f3f5;
+  --vc-muted: #9aa0ac;
+}
+
+.vc-lobby {
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--vc-bg);
+  padding: 24px;
+}
+
+.vc-lobby-card {
+  background: var(--vc-surface);
+  border-radius: 16px;
+  padding: 40px 32px;
+  width: 100%;
+  max-width: 380px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+  animation: vc-fade-up 0.35s ease;
+}
+
+.vc-lobby-card h2 {
+  color: var(--vc-text);
+  margin: 0 0 8px;
+  font-size: 22px;
+}
+
+.vc-subtext {
+  color: var(--vc-muted);
+  font-size: 14px;
+  margin: 0 0 24px;
+}
+
+.vc-input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid #2a2e37;
+  background: #12141a;
+  color: var(--vc-text);
+  font-size: 14px;
+  margin-bottom: 12px;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease;
+}
+
+.vc-input:focus {
+  outline: none;
+  border-color: var(--vc-accent);
+}
+
+.vc-error {
+  color: var(--vc-danger);
+  font-size: 13px;
+  margin: 0 0 12px;
+}
+
+.vc-btn {
+  border: none;
+  border-radius: 10px;
+  padding: 12px 20px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.vc-btn:active {
+  transform: scale(0.98);
+}
+
+.vc-btn-primary {
+  background: var(--vc-accent);
+  color: white;
+}
+
+.vc-btn-primary:hover {
+  opacity: 0.9;
+}
+
+.vc-room {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  background: var(--vc-bg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.vc-status {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(20, 22, 28, 0.75);
+  backdrop-filter: blur(6px);
+  color: var(--vc-text);
+  padding: 6px 16px;
+  border-radius: 999px;
+  font-size: 13px;
+  z-index: 5;
+  transition: opacity 0.3s ease;
+  opacity: 1;
+}
+
+.vc-status:empty {
+  opacity: 0;
+}
+
+.vc-stage {
+  flex: 1;
+  position: relative;
+  background: #000;
+}
+
+.vc-remote-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: #000;
+}
+
+.vc-local-video {
+  position: absolute;
+  bottom: 96px;
+  right: 20px;
+  width: 160px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  transition: opacity 0.3s ease;
+  z-index: 4;
+}
+
+.vc-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vc-spinner {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.15);
+  border-top-color: var(--vc-accent);
+  animation: vc-spin 0.9s linear infinite;
+}
+
+.vc-controls {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 16px;
+  z-index: 5;
+}
+
+.vc-icon-btn {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.12);
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(6px);
+  transition: transform 0.15s ease, background 0.2s ease;
+}
+
+.vc-icon-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.vc-ended-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 17, 21, 0.85);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  z-index: 10;
+  color: var(--vc-text);
+}
+
+.vc-icon-btn:active {
+  transform: scale(0.92);
+}
+
+.vc-icon-btn-off {
+  background: rgba(229, 72, 77, 0.25);
+}
+
+.vc-icon-btn-end {
+  background: var(--vc-danger);
+  transform: rotate(135deg);
+}
+
+.vc-icon-btn-end:hover {
+  background: #cc3c40;
+}
+
+@keyframes vc-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes vc-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 480px) {
+  .vc-local-video {
+    width: 110px;
+    height: 84px;
+    bottom: 88px;
+    right: 12px;
+  }
+}
