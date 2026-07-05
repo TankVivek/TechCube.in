@@ -4,6 +4,67 @@ import Peer from "simple-peer";
 import io from "socket.io-client";
 import "../styles/VideoCall.css";
 
+// SVG Icon Components
+const MicIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+    <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+    <line x1="12" y1="19" x2="12" y2="23" />
+    <line x1="8" y1="23" x2="16" y2="23" />
+  </svg>
+);
+
+const MicOffIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="1" y1="1" x2="23" y2="23" />
+    <path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6" />
+    <path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2a7 7 0 0 1-.11 1.23" />
+    <line x1="12" y1="19" x2="12" y2="23" />
+    <line x1="8" y1="23" x2="16" y2="23" />
+  </svg>
+);
+
+const CameraIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+    <circle cx="12" cy="13" r="4" />
+  </svg>
+);
+
+const CameraOffIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="1" y1="1" x2="23" y2="23" />
+    <path d="M21 21l-4.19-4.19" />
+    <path d="M16.91 16.91A6.97 6.97 0 0 1 12 19c-3.87 0-7-3.13-7-7 0-1.93.78-3.68 2.05-4.95" />
+    <path d="M12 5V2" />
+    <path d="M8 2h8" />
+  </svg>
+);
+
+const PhoneHangupIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.42 19.42 0 0 1-3.33-2.67m-2.67-3.34a19.79 19.79 0 0 1-3.07-8.63A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91" />
+    <line x1="23" y1="1" x2="1" y2="23" />
+  </svg>
+);
+
+const ScreenShareIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M13 3H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-7" />
+    <path d="M8 21h8" />
+    <path d="M12 17v4" />
+  </svg>
+);
+
+const ScreenShareOffIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M13 3H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-7" />
+    <path d="M8 21h8" />
+    <path d="M12 17v4" />
+    <line x1="2" y1="2" x2="22" y2="22" />
+  </svg>
+);
+
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || window.location.origin;
 
 function getIceServers() {
@@ -66,11 +127,19 @@ export default function VideoCall() {
   const [status, setStatus] = useState("idle");
   const [micOn, setMicOn] = useState(true);
   const [camOn, setCamOn] = useState(true);
+  const [screenSharing, setScreenSharing] = useState(false);
   const [fatalError, setFatalError] = useState("");
   const [mediaWarning, setMediaWarning] = useState("");
   const [joining, setJoining] = useState(true);
   const [enablingMedia, setEnablingMedia] = useState(false);
   const [hasLocalMedia, setHasLocalMedia] = useState(false);
+  const [connectionQuality, setConnectionQuality] = useState("unknown");
+  const [bitrate, setBitrate] = useState(0);
+
+  const screenStreamRef = useRef(null);
+  const originalVideoTrackRef = useRef(null);
+  const statsIntervalRef = useRef(null);
+  const previousBytesRef = useRef(0);
 
   const socketRef = useRef(null);
   const peerRef = useRef(null);
@@ -83,18 +152,30 @@ export default function VideoCall() {
     localStreamRef.current = stream;
     if (localVideoRef.current) localVideoRef.current.srcObject = stream;
     setHasLocalMedia(true);
-    setMicOn(stream.getAudioTracks().some((t) => t.enabled));
-    setCamOn(stream.getVideoTracks().some((t) => t.enabled));
+    const audioTracks = stream.getAudioTracks();
+    const videoTracks = stream.getVideoTracks();
+    setMicOn(audioTracks.length > 0 && audioTracks[0].enabled);
+    setCamOn(videoTracks.length > 0 && videoTracks[0].enabled);
   }, []);
 
   const cleanup = useCallback(() => {
+    if (statsIntervalRef.current) {
+      clearInterval(statsIntervalRef.current);
+      statsIntervalRef.current = null;
+    }
     peerRef.current?.destroy();
     peerRef.current = null;
     localStreamRef.current?.getTracks().forEach((track) => track.stop());
     localStreamRef.current = null;
+    screenStreamRef.current?.getTracks().forEach((track) => track.stop());
+    screenStreamRef.current = null;
+    originalVideoTrackRef.current = null;
     socketRef.current?.disconnect();
     socketRef.current = null;
     startedRef.current = false;
+    setConnectionQuality("unknown");
+    setBitrate(0);
+    previousBytesRef.current = 0;
   }, []);
 
   const createPeer = useCallback((initiator, remoteSocketId, socket, stream) => {
@@ -102,8 +183,8 @@ export default function VideoCall() {
       initiator,
       trickle: true,
       config: { iceServers: getIceServers() },
+      stream: stream || undefined,
     };
-    if (stream) opts.stream = stream;
 
     const peer = new Peer(opts);
 
@@ -115,16 +196,75 @@ export default function VideoCall() {
       if (remoteVideoRef.current) remoteVideoRef.current.srcObject = remoteStream;
       setStatus("connected");
       setMediaWarning("");
+      
+      // Start monitoring connection quality
+      startStatsMonitoring(peer);
     });
 
     peer.on("close", () => setStatus("waiting"));
     peer.on("error", (err) => {
       console.error("Peer error:", err);
-      setMediaWarning("Connection interrupted. Waiting for the other person…");
+      if (err.code === 'ERR_WEBRTC') {
+        setMediaWarning("WebRTC connection failed. Please check if your browser supports WebRTC.");
+      } else if (err.code === 'ERR_PEER_CONNECTION_FAILED') {
+        setMediaWarning("Could not establish peer connection. The other person may have left.");
+      } else {
+        setMediaWarning("Connection interrupted. Waiting for the other person…");
+      }
     });
 
     peerRef.current = peer;
     return peer;
+  }, []);
+
+  const startStatsMonitoring = useCallback((peer) => {
+    if (statsIntervalRef.current) {
+      clearInterval(statsIntervalRef.current);
+    }
+
+    statsIntervalRef.current = setInterval(async () => {
+      try {
+        if (peer._pc) {
+          const stats = await peer._pc.getStats();
+          let currentBytes = 0;
+          let packetsLost = 0;
+          let packetsReceived = 0;
+          let rtt = 0;
+
+          stats.forEach(report => {
+            if (report.type === 'inbound-rtp' && report.mediaType === 'video') {
+              currentBytes += report.bytesReceived || 0;
+              packetsLost += report.packetsLost || 0;
+              packetsReceived += report.packetsReceived || 0;
+            }
+            if (report.type === 'remote-inbound-rtp' && report.mediaType === 'video') {
+              rtt = report.roundTripTime || 0;
+            }
+          });
+
+          // Calculate bitrate
+          const bytesDiff = currentBytes - previousBytesRef.current;
+          const bitrateKbps = (bytesDiff * 8 / 1000).toFixed(1);
+          setBitrate(parseFloat(bitrateKbps));
+          previousBytesRef.current = currentBytes;
+
+          // Determine connection quality
+          const lossRate = packetsReceived > 0 ? (packetsLost / packetsReceived) * 100 : 0;
+          
+          if (lossRate < 1 && rtt < 100) {
+            setConnectionQuality("excellent");
+          } else if (lossRate < 3 && rtt < 200) {
+            setConnectionQuality("good");
+          } else if (lossRate < 5 && rtt < 300) {
+            setConnectionQuality("fair");
+          } else {
+            setConnectionQuality("poor");
+          }
+        }
+      } catch (e) {
+        console.warn("Could not get stats:", e);
+      }
+    }, 2000);
   }, []);
 
   const tryAcquireMedia = useCallback(async () => {
@@ -133,16 +273,23 @@ export default function VideoCall() {
       attachLocalStream(stream);
       setMediaWarning("");
 
-      if (peerRef.current && !peerRef.current.destroyed) {
-        try {
-          peerRef.current.addStream(stream);
-        } catch {
-          // Peer may already have a stream attached
+      // If peer exists and doesn't have a stream, we need to recreate it with the new stream
+      if (peerRef.current && !peerRef.current.destroyed && !peerRef.current.stream) {
+        // Destroy current peer and recreate with stream
+        const currentPeer = peerRef.current;
+        peerRef.current = null;
+        currentPeer.destroy();
+        
+        // Recreate peer with stream
+        const socket = socketRef.current;
+        if (socket && socket.connected) {
+          // This will trigger a reconnection with the new stream
+          socket.emit("request-reconnect");
         }
       }
       return true;
     } catch (err) {
-      console.error(err);
+      console.error("Media acquisition error:", err);
       setMediaWarning(mediaErrorMessage(err));
       return false;
     }
@@ -166,8 +313,9 @@ export default function VideoCall() {
     const socket = io(SOCKET_URL, { transports: ["websocket", "polling"] });
     socketRef.current = socket;
 
-    socket.on("connect_error", () => {
-      setFatalError("Could not connect to the call server. Please check your connection and try again.");
+    socket.on("connect_error", (err) => {
+      console.error("Socket connection error:", err);
+      setFatalError("Could not connect to the call server. Please check your internet connection and try again.");
       setJoining(false);
       cleanup();
     });
@@ -190,7 +338,7 @@ export default function VideoCall() {
     });
 
     socket.on("room-full", () => {
-      setFatalError("This call room is full. Only two participants are allowed.");
+      setFatalError("This call room is full. Only two participants are allowed per room.");
       cleanup();
       setStatus("ended");
       setJoining(false);
@@ -225,18 +373,123 @@ export default function VideoCall() {
   }, [roomId, startCall, cleanup]);
 
   const toggleMic = () => {
-    const track = localStreamRef.current?.getAudioTracks()[0];
-    if (track) {
+    const audioTracks = localStreamRef.current?.getAudioTracks();
+    if (audioTracks && audioTracks.length > 0) {
+      const track = audioTracks[0];
       track.enabled = !track.enabled;
       setMicOn(track.enabled);
+      
+      // Notify peer about audio state change
+      if (peerRef.current && !peerRef.current.destroyed) {
+        try {
+          const audioTrack = localStreamRef.current.getAudioTracks()[0];
+          if (peerRef.current._pc) {
+            const senders = peerRef.current._pc.getSenders();
+            const audioSender = senders.find(s => s.track?.kind === 'audio');
+            if (audioSender) {
+              audioSender.track.enabled = track.enabled;
+            }
+          }
+        } catch (e) {
+          console.warn("Could not update audio track state:", e);
+        }
+      }
     }
   };
 
   const toggleCam = () => {
-    const track = localStreamRef.current?.getVideoTracks()[0];
-    if (track) {
+    const videoTracks = localStreamRef.current?.getVideoTracks();
+    if (videoTracks && videoTracks.length > 0) {
+      const track = videoTracks[0];
       track.enabled = !track.enabled;
       setCamOn(track.enabled);
+      
+      // Notify peer about video state change
+      if (peerRef.current && !peerRef.current.destroyed) {
+        try {
+          const videoTrack = localStreamRef.current.getVideoTracks()[0];
+          if (peerRef.current._pc) {
+            const senders = peerRef.current._pc.getSenders();
+            const videoSender = senders.find(s => s.track?.kind === 'video');
+            if (videoSender) {
+              videoSender.track.enabled = track.enabled;
+            }
+          }
+        } catch (e) {
+          console.warn("Could not update video track state:", e);
+        }
+      }
+    }
+  };
+
+  const toggleScreenShare = async () => {
+    if (screenSharing) {
+      // Stop screen sharing
+      if (screenStreamRef.current) {
+        screenStreamRef.current.getTracks().forEach(track => track.stop());
+        screenStreamRef.current = null;
+      }
+      
+      // Restore original video track
+      if (originalVideoTrackRef.current && peerRef.current && !peerRef.current.destroyed) {
+        try {
+          const senders = peerRef.current._pc.getSenders();
+          const videoSender = senders.find(s => s.track?.kind === 'video');
+          if (videoSender) {
+            videoSender.replaceTrack(originalVideoTrackRef.current);
+          }
+        } catch (e) {
+          console.warn("Could not restore video track:", e);
+          setMediaWarning("Could not restore camera. Please try toggling your camera.");
+        }
+      }
+      
+      setScreenSharing(false);
+    } else {
+      // Start screen sharing
+      try {
+        const screenStream = await navigator.mediaDevices.getDisplayMedia({
+          video: { cursor: "always" },
+          audio: false
+        });
+        
+        screenStreamRef.current = screenStream;
+        
+        // Store original video track
+        const videoTracks = localStreamRef.current?.getVideoTracks();
+        if (videoTracks && videoTracks.length > 0) {
+          originalVideoTrackRef.current = videoTracks[0];
+        }
+        
+        // Replace video track with screen share track
+        if (peerRef.current && !peerRef.current.destroyed) {
+          try {
+            const senders = peerRef.current._pc.getSenders();
+            const videoSender = senders.find(s => s.track?.kind === 'video');
+            const screenTrack = screenStream.getVideoTracks()[0];
+            if (videoSender && screenTrack) {
+              videoSender.replaceTrack(screenTrack);
+            }
+          } catch (e) {
+            console.warn("Could not replace video track with screen share:", e);
+            setMediaWarning("Screen sharing started but may not be visible to the other person.");
+          }
+        }
+        
+        // Handle user stopping screen share via browser UI
+        screenStream.getVideoTracks()[0].onended = () => {
+          toggleScreenShare();
+        };
+        
+        setScreenSharing(true);
+      } catch (err) {
+        console.error("Screen share error:", err);
+        if (err.name === 'NotAllowedError') {
+          setMediaWarning("Screen sharing was denied. Please allow screen sharing permissions.");
+        } else {
+          setMediaWarning("Could not start screen sharing. Please try again.");
+        }
+      }
     }
   };
 
@@ -311,6 +564,19 @@ export default function VideoCall() {
   return (
     <div className="vc-room">
       <div className={`vc-status vc-status-${status}`}>{statusLabel}</div>
+      {status === "connected" && (
+        <div className="vc-connection-indicator">
+          <span className={`vc-quality-dot vc-quality-${connectionQuality}`} />
+          <span className="vc-quality-text">
+            {connectionQuality === "excellent" && "Excellent"}
+            {connectionQuality === "good" && "Good"}
+            {connectionQuality === "fair" && "Fair"}
+            {connectionQuality === "poor" && "Poor"}
+            {connectionQuality === "unknown" && "Checking..."}
+          </span>
+          <span className="vc-bitrate">{bitrate > 0 ? `${bitrate} kbps` : ""}</span>
+        </div>
+      )}
 
       {mediaWarning && (
         <div className="vc-media-banner">
@@ -333,9 +599,10 @@ export default function VideoCall() {
             </p>
           </div>
         )}
-        <video ref={localVideoRef} className="vc-local-video" autoPlay playsInline muted />
-        {!hasLocalVideo && (
-          <div className="vc-local-video vc-local-placeholder">
+        {hasLocalVideo ? (
+          <video ref={localVideoRef} className="vc-local-video" autoPlay playsInline muted />
+        ) : (
+          <div className="vc-local-placeholder">
             <span>No camera</span>
           </div>
         )}
@@ -343,13 +610,13 @@ export default function VideoCall() {
 
       <div className="vc-controls">
         <button
-          className={`vc-icon-btn ${micOn && hasLocalMedia ? "" : "vc-icon-btn-off"}`}
+          className={`vc-icon-btn ${micOn && hasLocalMedia && localStreamRef.current?.getAudioTracks().length > 0 ? "" : "vc-icon-btn-off"}`}
           onClick={toggleMic}
-          disabled={!hasLocalMedia || !localStreamRef.current?.getAudioTracks().length}
+          disabled={!hasLocalMedia || !localStreamRef.current?.getAudioTracks()?.length}
           title={micOn ? "Mute mic" : "Unmute mic"}
           aria-label={micOn ? "Mute microphone" : "Unmute microphone"}
         >
-          {micOn ? "🎤" : "🔇"}
+          {micOn ? <MicIcon /> : <MicOffIcon />}
         </button>
         <button
           className={`vc-icon-btn ${camOn && hasLocalVideo ? "" : "vc-icon-btn-off"}`}
@@ -358,10 +625,19 @@ export default function VideoCall() {
           title={camOn ? "Turn off camera" : "Turn on camera"}
           aria-label={camOn ? "Turn off camera" : "Turn on camera"}
         >
-          {camOn ? "📷" : "🚫"}
+          {camOn ? <CameraIcon /> : <CameraOffIcon />}
+        </button>
+        <button
+          className={`vc-icon-btn ${screenSharing ? "vc-icon-btn-active" : ""}`}
+          onClick={toggleScreenShare}
+          disabled={!hasLocalMedia}
+          title={screenSharing ? "Stop screen sharing" : "Share screen"}
+          aria-label={screenSharing ? "Stop screen sharing" : "Share screen"}
+        >
+          {screenSharing ? <ScreenShareOffIcon /> : <ScreenShareIcon />}
         </button>
         <button className="vc-icon-btn vc-icon-btn-end" onClick={endCall} title="End call" aria-label="End call">
-          📞
+          <PhoneHangupIcon />
         </button>
       </div>
 
