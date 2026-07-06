@@ -80,6 +80,35 @@ function getIceServers() {
   ];
 }
 
+function getVideoConstraints(isMobile = false) {
+  const isHighEnd = !isMobile && navigator.hardwareConcurrency && navigator.hardwareConcurrency > 4;
+  
+  if (isMobile) {
+    return {
+      width: { ideal: 720, max: 1280 },
+      height: { ideal: 480, max: 720 },
+      facingMode: "user",
+      frameRate: { ideal: 24, max: 30 }
+    };
+  }
+  
+  if (isHighEnd) {
+    return {
+      width: { ideal: 1920, max: 2560 },
+      height: { ideal: 1080, max: 1440 },
+      facingMode: "user",
+      frameRate: { ideal: 30, max: 60 }
+    };
+  }
+  
+  return {
+    width: { ideal: 1280, max: 1920 },
+    height: { ideal: 720, max: 1080 },
+    facingMode: "user",
+    frameRate: { ideal: 30, max: 30 }
+  };
+}
+
 async function requestMedia() {
   if (!navigator.mediaDevices?.getUserMedia) {
     const err = new Error("Media devices not supported in this browser.");
@@ -87,10 +116,21 @@ async function requestMedia() {
     throw err;
   }
 
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  const videoConstraints = getVideoConstraints(isMobile);
+  
+  const audioConstraints = {
+    echoCancellation: true,
+    noiseSuppression: true,
+    autoGainControl: true,
+    sampleRate: { ideal: 48000 }
+  };
+
   const attempts = [
-    { video: { facingMode: "user" }, audio: { echoCancellation: true, noiseSuppression: true } },
-    { video: true, audio: true },
-    { video: false, audio: true },
+    { video: videoConstraints, audio: audioConstraints },
+    { video: { ...videoConstraints, width: { ideal: 640 }, height: { ideal: 480 } }, audio: audioConstraints },
+    { video: true, audio: audioConstraints },
+    { video: false, audio: audioConstraints },
   ];
 
   let lastError;
@@ -135,11 +175,13 @@ export default function VideoCall() {
   const [hasLocalMedia, setHasLocalMedia] = useState(false);
   const [connectionQuality, setConnectionQuality] = useState("unknown");
   const [bitrate, setBitrate] = useState(0);
+  const [isInBackground, setIsInBackground] = useState(false);
 
   const screenStreamRef = useRef(null);
   const originalVideoTrackRef = useRef(null);
   const statsIntervalRef = useRef(null);
   const previousBytesRef = useRef(0);
+  const visibilityHandlerRef = useRef(null);
 
   const socketRef = useRef(null);
   const peerRef = useRef(null);
@@ -163,6 +205,10 @@ export default function VideoCall() {
       clearInterval(statsIntervalRef.current);
       statsIntervalRef.current = null;
     }
+    if (visibilityHandlerRef.current) {
+      document.removeEventListener("visibilitychange", visibilityHandlerRef.current);
+      visibilityHandlerRef.current = null;
+    }
     peerRef.current?.destroy();
     peerRef.current = null;
     localStreamRef.current?.getTracks().forEach((track) => track.stop());
@@ -176,6 +222,7 @@ export default function VideoCall() {
     setConnectionQuality("unknown");
     setBitrate(0);
     previousBytesRef.current = 0;
+    setIsInBackground(false);
   }, []);
 
   const createPeer = useCallback((initiator, remoteSocketId, socket, stream) => {
@@ -371,6 +418,65 @@ export default function VideoCall() {
     if (roomId?.trim()) startCall();
     return cleanup;
   }, [roomId, startCall, cleanup]);
+
+  // Handle page visibility for mobile/background scenarios
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        setIsInBackground(true);
+        // Pause video when in background to save resources
+        if (localVideoRef.current) {
+          localVideoRef.current.pause();
+        }
+        if (remoteVideoRef.current) {
+          remoteVideoRef.current.pause();
+        }
+        // Lower video quality when in background
+        if (localStreamRef.current) {
+          const videoTracks = localStreamRef.current.getVideoTracks();
+          videoTracks.forEach(track => {
+            if (track.enabled) {
+              const settings = track.getSettings();
+              if (settings.width && settings.width > 640) {
+                track.applyConstraints({
+                  width: { ideal: 640, max: 640 },
+                  height: { ideal: 480, max: 480 },
+                  frameRate: { ideal: 15, max: 15 }
+                }).catch(() => {});
+              }
+            }
+          });
+        }
+      } else {
+        setIsInBackground(false);
+        // Resume video when coming back to foreground
+        if (localVideoRef.current) {
+          localVideoRef.current.play().catch(() => {});
+        }
+        if (remoteVideoRef.current) {
+          remoteVideoRef.current.play().catch(() => {});
+        }
+        // Restore video quality when back in foreground
+        if (localStreamRef.current && !isInBackground) {
+          const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+          const videoConstraints = getVideoConstraints(isMobile);
+          const videoTracks = localStreamRef.current.getVideoTracks();
+          videoTracks.forEach(track => {
+            if (track.enabled) {
+              track.applyConstraints(videoConstraints).catch(() => {});
+            }
+          });
+        }
+      }
+    };
+
+    visibilityHandlerRef.current = handleVisibilityChange;
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, []);
 
   const toggleMic = () => {
     const audioTracks = localStreamRef.current?.getAudioTracks();
