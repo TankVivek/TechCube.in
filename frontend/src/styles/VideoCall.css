@@ -204,6 +204,7 @@
   transition: all 0.3s ease;
   z-index: 4;
   background: #1a1d24;
+  transform: scaleX(1);
 }
 
 .vc-placeholder {

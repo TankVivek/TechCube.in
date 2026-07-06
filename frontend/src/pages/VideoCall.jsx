@@ -80,32 +80,46 @@ function getIceServers() {
   ];
 }
 
-function getVideoConstraints(isMobile = false) {
+function getVideoConstraints(isMobile = false, qualityLevel = 'high') {
   const isHighEnd = !isMobile && navigator.hardwareConcurrency && navigator.hardwareConcurrency > 4;
   
-  if (isMobile) {
-    return {
-      width: { ideal: 720, max: 1280 },
+  // Adaptive quality based on network conditions
+  const qualitySettings = {
+    low: {
+      width: { ideal: 480, max: 640 },
+      height: { ideal: 360, max: 480 },
+      frameRate: { ideal: 15, max: 15 }
+    },
+    medium: {
+      width: { ideal: 640, max: 1280 },
       height: { ideal: 480, max: 720 },
-      facingMode: "user",
       frameRate: { ideal: 24, max: 30 }
-    };
-  }
-  
-  if (isHighEnd) {
-    return {
+    },
+    high: {
+      width: { ideal: 1280, max: 1920 },
+      height: { ideal: 720, max: 1080 },
+      frameRate: { ideal: 30, max: 30 }
+    },
+    ultra: {
       width: { ideal: 1920, max: 2560 },
       height: { ideal: 1080, max: 1440 },
-      facingMode: "user",
       frameRate: { ideal: 30, max: 60 }
-    };
+    }
+  };
+  
+  let quality = qualitySettings[qualityLevel] || qualitySettings.high;
+  
+  if (isMobile) {
+    quality = qualitySettings.medium;
+  }
+  
+  if (isHighEnd && qualityLevel === 'ultra') {
+    quality = qualitySettings.ultra;
   }
   
   return {
-    width: { ideal: 1280, max: 1920 },
-    height: { ideal: 720, max: 1080 },
-    facingMode: "user",
-    frameRate: { ideal: 30, max: 30 }
+    ...quality,
+    facingMode: "user"
   };
 }
 
@@ -257,6 +271,8 @@ export default function VideoCall() {
   const [connectionQuality, setConnectionQuality] = useState("unknown");
   const [bitrate, setBitrate] = useState(0);
   const [isInBackground, setIsInBackground] = useState(false);
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const [videoQuality, setVideoQuality] = useState('high');
 
   const screenStreamRef = useRef(null);
   const originalVideoTrackRef = useRef(null);
@@ -376,17 +392,21 @@ export default function VideoCall() {
           setBitrate(parseFloat(bitrateKbps));
           previousBytesRef.current = currentBytes;
 
-          // Determine connection quality
+          // Determine connection quality and adjust video quality
           const lossRate = packetsReceived > 0 ? (packetsLost / packetsReceived) * 100 : 0;
           
           if (lossRate < 1 && rtt < 100) {
             setConnectionQuality("excellent");
+            setVideoQuality('ultra');
           } else if (lossRate < 3 && rtt < 200) {
             setConnectionQuality("good");
+            setVideoQuality('high');
           } else if (lossRate < 5 && rtt < 300) {
             setConnectionQuality("fair");
+            setVideoQuality('medium');
           } else {
             setConnectionQuality("poor");
+            setVideoQuality('low');
           }
         }
       } catch (e) {
@@ -614,6 +634,13 @@ export default function VideoCall() {
     }
   };
 
+  const adjustZoom = (delta) => {
+    setZoomLevel(prev => {
+      const newZoom = Math.max(1, Math.min(3, prev + delta));
+      return newZoom;
+    });
+  };
+
   const toggleScreenShare = async () => {
     if (screenSharing) {
       // Stop screen sharing
@@ -792,7 +819,17 @@ export default function VideoCall() {
           </div>
         )}
         {hasLocalVideo ? (
-          <video ref={localVideoRef} className="vc-local-video" autoPlay playsInline muted />
+          <video 
+            ref={localVideoRef} 
+            className="vc-local-video" 
+            autoPlay 
+            playsInline 
+            muted 
+            style={{
+              transform: `scale(${zoomLevel})`,
+              transformOrigin: 'center center'
+            }}
+          />
         ) : (
           <div className="vc-local-placeholder">
             <span>No camera</span>
@@ -819,6 +856,37 @@ export default function VideoCall() {
         >
           {camOn ? <CameraIcon /> : <CameraOffIcon />}
         </button>
+        {hasLocalVideo && (
+          <>
+            <button
+              className="vc-icon-btn"
+              onClick={() => adjustZoom(0.2)}
+              disabled={zoomLevel >= 3}
+              title="Zoom in"
+              aria-label="Zoom in"
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                <line x1="11" y1="8" x2="11" y2="14" />
+                <line x1="8" y1="11" x2="14" y2="11" />
+              </svg>
+            </button>
+            <button
+              className="vc-icon-btn"
+              onClick={() => adjustZoom(-0.2)}
+              disabled={zoomLevel <= 1}
+              title="Zoom out"
+              aria-label="Zoom out"
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                <line x1="8" y1="11" x2="14" y2="11" />
+              </svg>
+            </button>
+          </>
+        )}
         <button
           className={`vc-icon-btn ${screenSharing ? "vc-icon-btn-active" : ""}`}
           onClick={toggleScreenShare}
