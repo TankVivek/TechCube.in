@@ -246,34 +246,34 @@ app.post("/api/support/ticket/:id/video-call", (req, res) => {
     }
 });
 
-// Admin: generate Google Meet link automatically
-app.post("/api/support/ticket/:id/meet", async (req, res) => {
-    try {
-        const pass = req.headers['x-admin-password'];
-        if (pass !== ADMIN_PASS) return res.status(401).json({ success: false, message: "Unauthorized" });
-
-        const ticketId = req.params.id;
-        const ticket = support.loadTicket(ticketId);
-        if (!ticket) return res.status(404).json({ success: false, message: "Ticket not found" });
-
-        const googleService = require("./src/services/google.service");
-        
-        // Generate Google Meet URL
-        const meetLink = await googleService.createMeetLink(ticketId);
-
-        // Add Google Meet link as a special message
-        const msg = support.addMessage(ticketId, 'agent', `Please join the Google Meet video support call: ${meetLink}`);
-        if (msg) {
-            io.to(`ticket_${ticketId}`).emit('new_message', msg);
-            io.to("admin_room").emit('ticket_update', { ticketId, msg });
-        }
-
-        res.json({ success: true, meetLink });
-    } catch (e) {
-        console.error("Google Meet API Error:", e.message);
-        res.status(400).json({ success: false, message: e.message });
-    }
-});
+// Admin: generate Google Meet link automatically (DISABLED - not using Google Meet)
+// app.post("/api/support/ticket/:id/meet", async (req, res) => {
+//     try {
+//         const pass = req.headers['x-admin-password'];
+//         if (pass !== ADMIN_PASS) return res.status(401).json({ success: false, message: "Unauthorized" });
+//
+//         const ticketId = req.params.id;
+//         const ticket = support.loadTicket(ticketId);
+//         if (!ticket) return res.status(404).json({ success: false, message: "Ticket not found" });
+//
+//         const googleService = require("./src/services/google.service");
+//         
+//         // Generate Google Meet URL
+//         const meetLink = await googleService.createMeetLink(ticketId);
+//
+//         // Add Google Meet link as a special message
+//         const msg = support.addMessage(ticketId, 'agent', `Please join the Google Meet video support call: ${meetLink}`);
+//         if (msg) {
+//             io.to(`ticket_${ticketId}`).emit('new_message', msg);
+//             io.to("admin_room").emit('ticket_update', { ticketId, msg });
+//         }
+//
+//         res.json({ success: true, meetLink });
+//     } catch (e) {
+//         console.error("Google Meet API Error:", e.message);
+//         res.status(400).json({ success: false, message: e.message });
+//     }
+// });
 
 // Admin: send support ticket guidelines/instructions email
 app.post("/api/support/ticket/:id/send-email-instructions", async (req, res) => {
