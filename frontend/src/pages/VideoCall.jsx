@@ -109,11 +109,72 @@ function getVideoConstraints(isMobile = false) {
   };
 }
 
+async function checkPermissions() {
+  if (!navigator.permissions) {
+    return { video: 'prompt', audio: 'prompt' };
+  }
+  
+  try {
+    const videoStatus = await navigator.permissions.query({ name: 'camera' });
+    const audioStatus = await navigator.permissions.query({ name: 'microphone' });
+    return {
+      video: videoStatus.state,
+      audio: audioStatus.state
+    };
+  } catch (e) {
+    return { video: 'prompt', audio: 'prompt' };
+  }
+}
+
+async function enumerateDevices() {
+  if (!navigator.mediaDevices?.enumerateDevices) {
+    return { video: [], audio: [] };
+  }
+  
+  try {
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    return {
+      video: devices.filter(d => d.kind === 'videoinput'),
+      audio: devices.filter(d => d.kind === 'audioinput')
+    };
+  } catch (e) {
+    console.warn('Could not enumerate devices:', e);
+    return { video: [], audio: [] };
+  }
+}
+
 async function requestMedia() {
+  // Check if we're on HTTPS (required for media devices)
+  if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+    const err = new Error("Camera and microphone access requires HTTPS.");
+    err.name = "SecurityError";
+    throw err;
+  }
+
   if (!navigator.mediaDevices?.getUserMedia) {
     const err = new Error("Media devices not supported in this browser.");
     err.name = "NotSupportedError";
     throw err;
+  }
+
+  // Check permissions first - if denied, return null for receive-only mode
+  const permissions = await checkPermissions();
+  if (permissions.video === 'denied' && permissions.audio === 'denied') {
+    console.warn('Both camera and microphone permissions denied - enabling receive-only mode');
+    return null;
+  }
+
+  // Check if devices are available
+  const devices = await enumerateDevices();
+  if (devices.video.length === 0 && devices.audio.length === 0) {
+    console.warn('No camera or microphone devices found - enabling receive-only mode');
+    return null;
+  }
+  if (devices.video.length === 0) {
+    console.warn('No camera devices found, will try audio only');
+  }
+  if (devices.audio.length === 0) {
+    console.warn('No microphone devices found, will try video only');
   }
 
   const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -131,6 +192,7 @@ async function requestMedia() {
     { video: { ...videoConstraints, width: { ideal: 640 }, height: { ideal: 480 } }, audio: audioConstraints },
     { video: true, audio: audioConstraints },
     { video: false, audio: audioConstraints },
+    { video: videoConstraints, audio: false },
   ];
 
   let lastError;
@@ -141,23 +203,42 @@ async function requestMedia() {
       lastError = err;
     }
   }
-  throw lastError;
+  // If all attempts fail, return null for receive-only mode instead of throwing
+  console.warn('All media acquisition attempts failed - enabling receive-only mode');
+  return null;
 }
 
 function mediaErrorMessage(err) {
+  if (err?.name === "SecurityError") {
+    return "Camera/microphone access requires HTTPS. Please use a secure connection.";
+  }
   if (err?.name === "NotAllowedError") {
-    return "Camera/microphone access was denied. Tap “Enable camera & mic” and allow permissions in your browser.";
+    return "Camera/microphone permission was denied. Click the camera/mic icon in your browser address bar (top right) and allow access, then tap “Enable camera & mic"
   }
   if (err?.name === "NotFoundError") {
-    return "No camera or microphone found on this device.";
+    const hasVideo = err?.devices?.video?.length > 0;
+    const hasAudio = err?.devices?.audio?.length > 0;
+    if (!hasVideo && !hasAudio) {
+      return "No camera or microphone found. Check if your devices are connected and not in use by another app.";
+    }
+    if (!hasVideo) {
+      return "No camera found. You can join with audio only, or connect a camera and try again.";
+    }
+    if (!hasAudio) {
+      return "No microphone found. You can join with video only, or connect a microphone and try again.";
+    }
+    return "No camera or microphone found on this device. Please ensure your devices are connected and working.";
   }
   if (err?.name === "NotReadableError") {
-    return "Camera or microphone is in use by another app. Close it and try again.";
+    return "Camera or microphone is in use by another app. Close other apps (Zoom, Teams, etc.) and try again.";
   }
   if (err?.name === "NotSupportedError") {
-    return "This browser does not support video calls. Try Chrome or Safari.";
+    return "This browser does not support video calls. Try Chrome, Firefox, or Safari.";
   }
-  return "Couldn't access camera/microphone. Tap “Enable camera & mic” to try again.";
+  if (err?.name === "OverconstrainedError") {
+    return "Your camera doesn't support the requested settings. Trying with lower quality...";
+  }
+  return "Couldn't access camera/microphone. Check your browser permissions and device settings, then tap “Enable camera & mic” to try again.";
 }
 
 export default function VideoCall() {
@@ -317,8 +398,13 @@ export default function VideoCall() {
   const tryAcquireMedia = useCallback(async () => {
     try {
       const stream = await requestMedia();
-      attachLocalStream(stream);
-      setMediaWarning("");
+      if (stream) {
+        attachLocalStream(stream);
+        setMediaWarning("");
+      } else {
+        // Receive-only mode - no local stream
+        setMediaWarning("You're in receive-only mode. The other person can see and hear you, but you can't see or hear them. Enable camera & mic to share your video/audio.");
+      }
 
       // If peer exists and doesn't have a stream, we need to recreate it with the new stream
       if (peerRef.current && !peerRef.current.destroyed && !peerRef.current.stream) {
