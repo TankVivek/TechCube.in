@@ -18,6 +18,7 @@ import SupportWidget from "./components/SupportWidget";
 const SupportAdmin = lazy(() => import("./pages/SupportAdmin"));
 const SupportTicket = lazy(() => import("./pages/SupportTicket"));
 const VideoCall = lazy(() => import("./pages/VideoCall"));
+const SoftwareCompanyMumbai = lazy(() => import("./pages/SoftwareCompanyMumbai"));
 
 const LoadingSpinner = () => (
   <div className="fixed inset-0 flex items-center justify-center bg-white dark:bg-slate-950 z-[100]">
@@ -58,6 +59,7 @@ const App = () => (
           <Route path="/" element={<HomePage />} />
           <Route path="/index.php" element={<Navigate to="/" replace />} />
           <Route path="/robots" element={<RobotsTxt />} />
+          <Route path="/software-company-in-mumbai" element={<Suspense fallback={<LoadingSpinner />}><SoftwareCompanyMumbai /></Suspense>} />
           <Route path="/support-admin" element={<Suspense fallback={<LoadingSpinner />}><SupportAdmin /></Suspense>} />
           <Route path="/support-ticket" element={<Suspense fallback={<LoadingSpinner />}><SupportTicket /></Suspense>} />
           <Route path="/video-call/:roomId" element={<Suspense fallback={<LoadingSpinner />}><VideoCall /></Suspense>} />

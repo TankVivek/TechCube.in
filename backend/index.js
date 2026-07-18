@@ -66,6 +66,28 @@ app.get("/health", (req, res) => {
     });
 });
 
+const canonicalHosts = new Set(["techcube.in", "www.techcube.in"]);
+
+app.use((req, res, next) => {
+    const forwardedHost = req.get("x-forwarded-host");
+    const host = (forwardedHost || req.get("host") || "").split(",")[0].trim().toLowerCase();
+    const hostname = host.split(":")[0];
+
+    if (!canonicalHosts.has(hostname)) return next();
+
+    const forwardedProto = req.get("x-forwarded-proto");
+    const protocol = (forwardedProto || req.protocol || "").split(",")[0].trim().toLowerCase();
+    const isHttp = protocol === "http";
+    const isWww = hostname === "www.techcube.in";
+    const isIndexPhp = /^\/index\.php(?:\/.*)?$/i.test(req.path);
+
+    if (!isHttp && !isWww && !isIndexPhp) return next();
+
+    const canonicalPath = isIndexPhp ? "/" : req.originalUrl;
+    const target = `https://techcube.in${canonicalPath}`;
+    return res.redirect(301, target);
+});
+
 // Socket.io setup
 const { Server } = require("socket.io");
 const io = new Server(server, {
