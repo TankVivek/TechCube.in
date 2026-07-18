@@ -441,13 +441,6 @@ app.get('/sitemap.xml', (req, res) => {
     }
 });
 
-
-// Catch-all: serve React app for all other routes
-app.get('*', (req, res) => {
-    if (req.path.startsWith('/api')) return res.status(404).json({ success: false, error: 'Endpoint not found' });
-    res.sendFile(path.join(__dirname, '../frontend/dist/index.html'));
-});
-
 // Redirect /index.php and any path starting with /index.php to /
 app.get(/^\/index\.php(\/.*)?$/, (req, res) => {
     res.redirect(301, '/');
@@ -455,6 +448,12 @@ app.get(/^\/index\.php(\/.*)?$/, (req, res) => {
 
 // Serve /index.php as the React app homepage
 app.get('/index.php', (req, res) => {
+    res.sendFile(path.join(__dirname, '../frontend/dist/index.html'));
+});
+
+// Catch-all: serve React app for all other routes
+app.get('*', (req, res) => {
+    if (req.path.startsWith('/api')) return res.status(404).json({ success: false, error: 'Endpoint not found' });
     res.sendFile(path.join(__dirname, '../frontend/dist/index.html'));
 });
 
