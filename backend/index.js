@@ -421,7 +421,7 @@ app.use(express.static(path.join(__dirname, "../frontend/dist")));
 
 // Serve robots.txt
 app.get('/robots.txt', (req, res) => {
-    const filePath = path.join(__dirname, '../frontend/robots.txt');
+    const filePath = path.join(__dirname, '../frontend/public/robots.txt');
     if (fs.existsSync(filePath)) {
         res.type('text/plain');
         res.sendFile(filePath);
@@ -432,7 +432,7 @@ app.get('/robots.txt', (req, res) => {
 
 // Serve sitemap.xml
 app.get('/sitemap.xml', (req, res) => {
-    const filePath = path.join(__dirname, '../frontend/sitemap.xml');
+    const filePath = path.join(__dirname, '../frontend/public/sitemap.xml');
     if (fs.existsSync(filePath)) {
         res.type('application/xml');
         res.sendFile(filePath);

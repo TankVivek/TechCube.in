@@ -2,57 +2,70 @@ import React from 'react';
 import { Helmet } from 'react-helmet-async';
 
 const SEOHead = ({
-  title = "TechCube - IT Solutions & Software Development Company",
-  description = "TechCube (also known as tech cube or techcubes) delivers cutting-edge software development, web applications, mobile apps, and AI solutions for businesses across India.",
-  canonicalUrl = "https://techcube.in",
-  image = "https://techcube.in/images/og-image.jpg",
+  title = "TechCube | AI, Web & Mobile App Development Company India",
+  description = "TechCube builds AI solutions, web applications, mobile apps, SaaS platforms, automation tools, and cloud software for startups and growing businesses.",
+  canonicalUrl = "https://techcube.in/",
+  image = "https://techcube.in/logo-square.png",
   type = "website"
 }) => {
+  const siteUrl = "https://techcube.in/";
+  const logoUrl = "https://techcube.in/logo-square.png";
+
   const organizationSchema = {
     "@context": "https://schema.org",
     "@type": "Organization",
     "@id": "https://techcube.in/#organization",
     "name": "TechCube",
-    "url": "https://techcube.in",
-    "logo": "https://techcube.in/logo-square.png",
-    "image": "https://techcube.in/images/og-image.jpg",
-    "sameAs": [
-      "https://facebook.com/techcube",
-      "https://twitter.com/techcube",
-      "https://linkedin.com/company/techcube",
-      "https://instagram.com/techcube"
-    ],
+    "alternateName": ["Tech Cube", "TechCube India"],
+    "url": siteUrl,
+    "logo": logoUrl,
+    "image": logoUrl,
     "address": {
       "@type": "PostalAddress",
-      "addressLocality": "Mumbai",
-      "addressRegion": "Maharashtra",
+      "addressRegion": "Gujarat",
       "addressCountry": "India"
     },
     "contactPoint": {
       "@type": "ContactPoint",
-      "telephone": "+91-9876543210",
-      "contactType": "customer service",
-      "email": "info@techcube.in"
+      "contactType": "sales",
+      "email": "contact@techcube.in",
+      "availableLanguage": ["English", "Hindi"]
     },
-    "description": "TechCube is a leading IT solutions provider specializing in web development, mobile apps, AI solutions, and custom software development for businesses."
+    "description": description
   };
 
   const serviceSchema = {
     "@context": "https://schema.org",
     "@type": "Service",
-    "serviceType": "Software Development",
+    "name": "Custom Software Development Services",
+    "serviceType": [
+      "AI Development",
+      "Web Application Development",
+      "Mobile App Development",
+      "SaaS Development",
+      "Cloud Services",
+      "Automation"
+    ],
     "provider": {
       "@type": "Organization",
+      "@id": "https://techcube.in/#organization",
       "name": "TechCube"
     },
     "areaServed": {
       "@type": "Country",
       "name": "India"
     },
-    "description": "Custom software development, web applications, mobile apps, and AI solutions for businesses.",
-    "offers": {
-      "@type": "Offer",
-      "availability": "https://schema.org/InStock"
+    "description": description
+  };
+
+  const websiteSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "@id": "https://techcube.in/#website",
+    "name": "TechCube",
+    "url": siteUrl,
+    "publisher": {
+      "@id": "https://techcube.in/#organization"
     }
   };
 
@@ -68,8 +81,11 @@ const SEOHead = ({
       <meta name="language" content="English" />
       <meta name="robots" content="index, follow" />
       <meta name="googlebot" content="index, follow" />
-      <meta name="theme-color" content="#0a0a0a" />
+      <meta name="theme-color" content="#0f172a" />
       <link rel="canonical" href={canonicalUrl} />
+      <link rel="icon" type="image/png" href="/logo-square.png" />
+      <link rel="apple-touch-icon" href="/logo-square.png" />
+      <link rel="manifest" href="/site.webmanifest" />
 
       {/* Open Graph */}
       <meta property="og:type" content={type} />
@@ -77,6 +93,8 @@ const SEOHead = ({
       <meta property="og:title" content={title} />
       <meta property="og:description" content={description} />
       <meta property="og:image" content={image} />
+      <meta property="og:image:alt" content="TechCube logo" />
+      <meta property="og:site_name" content="TechCube" />
 
       {/* Twitter */}
       <meta name="twitter:card" content="summary_large_image" />
@@ -84,6 +102,7 @@ const SEOHead = ({
       <meta name="twitter:title" content={title} />
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={image} />
+      <meta name="twitter:image:alt" content="TechCube logo" />
 
       {/* Keywords */}
       <meta
@@ -94,6 +113,9 @@ const SEOHead = ({
       {/* Structured Data */}
       <script type="application/ld+json">
         {JSON.stringify(organizationSchema)}
+      </script>
+      <script type="application/ld+json">
+        {JSON.stringify(websiteSchema)}
       </script>
       <script type="application/ld+json">
         {JSON.stringify(serviceSchema)}
